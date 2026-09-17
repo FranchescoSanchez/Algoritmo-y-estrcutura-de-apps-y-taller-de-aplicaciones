@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar sesión · Mi Portafolio UPLA</title>
+    <link rel="icon" href="img/upla-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Karla:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="barra" id="barra"></header>
+
+<div class="tarjeta-form">
+    <div class="marca-form">
+        <img src="img/upla-logo.png" alt="Universidad Peruana Los Andes">
+        <h1>Iniciar sesión</h1>
+        <p class="subtitulo">Entra para subir y gestionar tus tareas.</p>
+    </div>
+
+    <div id="mensaje"></div>
+
+    <form id="form-login">
+        <div class="campo">
+            <label for="email">Correo electrónico</label>
+            <input type="email" id="email" name="email" required autocomplete="email"
+                   placeholder="tucorreo@upla.edu.pe">
+        </div>
+        <div class="campo">
+            <label for="password">Contraseña</label>
+            <input type="password" id="password" name="password" required
+                   autocomplete="current-password" placeholder="Tu contraseña">
+        </div>
+        <button type="submit" class="btn btn-ancho">Entrar</button>
+    </form>
+
+    <p class="pie-form">
+        ¿Aún no tienes cuenta? <a href="registro.html">Créala aquí</a>
+    </p>
+</div>
+
+<script src="js/datos.js"></script>
+<script>
+    document.getElementById("form-login").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const email = document.getElementById("email").value.trim().toLowerCase();
+        const password = document.getElementById("password").value;
+        const mensaje = document.getElementById("mensaje");
+
+        const usuarios = obtenerUsuarios();
+        const usuario = usuarios.find((u) => u.email.toLowerCase() === email && u.password === password);
+
+        if (!usuario) {
+            mensaje.innerHTML = `<div class="aviso aviso-error">Correo o contraseña incorrectos.</div>`;
+            return;
+        }
+
+        iniciarSesion(usuario);
+        window.location.href = "dashboard.html";
+    });
+</script>
+</body>
+</html>

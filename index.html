@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Portafolio · UPLA</title>
+    <link rel="icon" href="img/upla-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Karla:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="barra" id="barra"></header>
+
+<section class="portada">
+    <div class="portada-inner">
+        <div>
+            <h1>Portafolio de estudiante</h1>
+            <p>
+                Aquí subo y organizo mis tareas de <strong>Taller de Aplicaciones 1</strong> y
+                <strong>Algoritmo y Estructura de Datos</strong>, unidad por unidad y semana
+                por semana, en el mismo orden en que las vimos en clase.
+            </p>
+            <p class="portada-presentacion">
+                Estudiante de <strong>Ingeniería de Sistemas y Computación</strong> — III Ciclo,
+                Universidad Peruana Los Andes.
+            </p>
+            <div class="portada-datos">
+                <div class="dato">
+                    <span class="cifra">2</span>
+                    <span class="etiqueta">Cursos</span>
+                </div>
+                <div class="dato">
+                    <span class="cifra">4</span>
+                    <span class="etiqueta">Unidades por curso</span>
+                </div>
+                <div class="dato">
+                    <span class="cifra" id="avance">0/16</span>
+                    <span class="etiqueta">Semanas con tareas</span>
+                </div>
+            </div>
+        </div>
+        <div class="portada-sello">
+            <img src="img/upla-logo.png" alt="">
+        </div>
+    </div>
+</section>
+
+<main class="contenedor">
+
+    <div class="encabezado-seccion">
+        <h2>Elige un curso</h2>
+        <p>Abre una unidad para ver las tareas subidas en cada semana.</p>
+    </div>
+
+    <div class="cursos" id="cursos"></div>
+
+    <div class="encabezado-seccion">
+        <h2 id="curso-titulo">Contenido del curso</h2>
+    </div>
+
+    <div id="unidades">
+        <div class="vacio">Cargando el curso...</div>
+    </div>
+
+</main>
+
+<footer class="pie">
+    Mi Portafolio · Universidad Peruana Los Andes · <span id="anio"></span>
+</footer>
+
+<script src="js/datos.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
