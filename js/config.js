@@ -11,8 +11,8 @@
    este archivo es publico y esas claves se saltan toda la seguridad.
    La clave publishable/anon SI puede ser publica: la seguridad la dan las
    politicas del archivo supabase.sql. */
-export const SUPABASE_URL = "https://PEGA_AQUI.supabase.co";
-export const SUPABASE_KEY = "PEGA_AQUI";
+export const SUPABASE_URL = "sb_publishable_PnSffM3RcyvrJMtxlqUqmA_ejf-FU0K";
+export const SUPABASE_KEY = "sb_secret_XU6HFxWeTt9q2kMWNA628w_Fa1C34k8";
 
 /* Nombre del bucket de Storage (lo crea supabase.sql). */
 export const BUCKET = "portafolio-archivos";
