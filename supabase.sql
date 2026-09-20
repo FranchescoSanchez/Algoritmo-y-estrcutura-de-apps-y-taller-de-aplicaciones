@@ -4,7 +4,7 @@
 --  Pega TODO este archivo en: Supabase -> SQL Editor -> New query -> Run
 --
 --  ANTES de ejecutarlo, cambia PEGA_AQUI_TU_UID (mas abajo) por el UID
---  de tu usuario (Authentication -> Users -> columna "f2d20dc1-ee26-47ac-8975-f0921e878b8c").
+--  de tu usuario (Authentication -> Users -> columna "User UID").
 --  Si te olvidas, el editor mostrara un error de tipo uuid y no se crea
 --  nada (asi nunca queda abierto por accidente).
 --
