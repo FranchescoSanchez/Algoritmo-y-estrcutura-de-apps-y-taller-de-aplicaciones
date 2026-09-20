@@ -19,7 +19,7 @@ language sql
 stable
 set search_path = ''
 as $$
-  select auth.uid() = 'f2d20dc1-ee26-47ac-8975-f0921e878b8c'::uuid
+  select auth.uid() = 'PEGA_AQUI_TU_UID'::uuid
 $$;
 
 -- 2) Tabla de tareas ---------------------------------------------------

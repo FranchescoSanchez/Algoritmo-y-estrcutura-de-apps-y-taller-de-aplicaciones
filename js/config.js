@@ -11,15 +11,15 @@
    este archivo es publico y esas claves se saltan toda la seguridad.
    La clave publishable/anon SI puede ser publica: la seguridad la dan las
    politicas del archivo supabase.sql. */
-export const SUPABASE_URL = "sb_publishable_PnSffM3RcyvrJMtxlqUqmA_ejf-FU0K";
-export const SUPABASE_KEY = "sb_secret_FZQly8XWjCXme037wg6Srw_reql9gnX";
+export const SUPABASE_URL = "https://PEGA_AQUI.supabase.co";
+export const SUPABASE_KEY = "PEGA_AQUI";
 
 /* Nombre del bucket de Storage (lo crea supabase.sql). */
 export const BUCKET = "portafolio-archivos";
 
 /* 2) Tu perfil publico (se ve en la barra de todas las paginas). */
 export const PERFIL = {
-    nombre: "Tu Nombre Completo",
+    nombre: "Franchesco Marchelo Sanchez Zuñiga",
     foto: "img/perfil.jpg",            // reemplaza img/perfil.jpg por tu foto
     presentacion: "Estudiante de Ingeniería de Sistemas y Computación — III Ciclo"
 };

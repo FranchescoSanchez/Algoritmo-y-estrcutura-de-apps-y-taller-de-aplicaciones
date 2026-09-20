@@ -12,7 +12,7 @@
 </head>
 <body>
 
-<header class="barra" id="barra"></header>
+<div id="barra"></div>
 
 <div class="tarjeta-form">
     <div class="marca-form">
@@ -21,7 +21,7 @@
         <p class="subtitulo">Entra para subir y gestionar tus tareas.</p>
     </div>
 
-    <div id="mensaje"></div>
+    <div id="aviso-contenedor"></div>
 
     <form id="form-login">
         <div class="campo">
@@ -38,29 +38,10 @@
     </form>
 
     <p class="pie-form">
-        ¿Aún no tienes cuenta? <a href="registro.html">Créala aquí</a>
+        Solo el dueño del portafolio necesita iniciar sesión. <a href="index.html">Volver al portafolio</a>
     </p>
 </div>
 
-<script src="js/datos.js"></script>
-<script>
-    document.getElementById("form-login").addEventListener("submit", (e) => {
-        e.preventDefault();
-        const email = document.getElementById("email").value.trim().toLowerCase();
-        const password = document.getElementById("password").value;
-        const mensaje = document.getElementById("mensaje");
-
-        const usuarios = obtenerUsuarios();
-        const usuario = usuarios.find((u) => u.email.toLowerCase() === email && u.password === password);
-
-        if (!usuario) {
-            mensaje.innerHTML = `<div class="aviso aviso-error">Correo o contraseña incorrectos.</div>`;
-            return;
-        }
-
-        iniciarSesion(usuario);
-        window.location.href = "dashboard.html";
-    });
-</script>
+<script type="module" src="js/login.js"></script>
 </body>
 </html>

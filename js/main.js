@@ -10,6 +10,10 @@ import "./barra.js";
 
 ponerAnio();
 
+// Foto y nombre del dueño, visibles para todos (salen de js/config.js)
+document.getElementById("portada-foto").src = PERFIL.foto || "img/perfil.jpg";
+document.getElementById("portada-nombre").textContent = PERFIL.nombre || "";
+
 const presentacion = document.getElementById("portada-presentacion");
 if (presentacion && PERFIL.presentacion) {
     presentacion.textContent = PERFIL.presentacion;

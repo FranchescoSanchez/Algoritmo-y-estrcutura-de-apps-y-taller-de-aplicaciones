@@ -207,6 +207,16 @@ a:hover { color: var(--upla-profundo); }
     box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
 }
 
+.sello-perfil { text-align: center; }
+
+.sello-perfil strong {
+    display: block;
+    margin-top: 16px;
+    font-family: "Bricolage Grotesque", sans-serif;
+    font-size: 1.2rem;
+    color: var(--blanco);
+}
+
 .portada-presentacion {
     margin-top: -6px;
     font-size: .92rem;
@@ -580,7 +590,9 @@ a:hover { color: var(--upla-profundo); }
 /* ===== Responsive ===== */
 @media (max-width: 820px) {
     .portada-inner { grid-template-columns: 1fr; gap: 32px; }
-    .portada-sello { display: none; }
+    .portada-sello { order: -1; }   /* en el celular la foto va arriba, no se oculta */
+    .portada-sello img.foto-perfil { width: 116px; height: 116px; }
+    .sello-perfil strong { margin-top: 12px; font-size: 1.05rem; }
     .barra { padding: 12px 18px; }
     .marca .marca-sub { display: none; }
     .contenedor { padding: 28px 18px 56px; }

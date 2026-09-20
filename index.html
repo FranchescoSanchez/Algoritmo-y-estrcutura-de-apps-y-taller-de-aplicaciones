@@ -12,7 +12,7 @@
 </head>
 <body>
 
-<header class="barra" id="barra"></header>
+<div id="barra"></div>
 
 <section class="portada">
     <div class="portada-inner">
@@ -23,7 +23,7 @@
                 <strong>Algoritmo y Estructura de Datos</strong>, unidad por unidad y semana
                 por semana, en el mismo orden en que las vimos en clase.
             </p>
-            <p class="portada-presentacion">
+            <p class="portada-presentacion" id="portada-presentacion">
                 Estudiante de <strong>Ingeniería de Sistemas y Computación</strong> — III Ciclo,
                 Universidad Peruana Los Andes.
             </p>
@@ -43,7 +43,10 @@
             </div>
         </div>
         <div class="portada-sello">
-            <img src="img/upla-logo.png" alt="">
+            <div class="sello-perfil">
+                <img src="img/perfil.jpg" alt="Foto de perfil" class="foto-perfil" id="portada-foto">
+                <strong id="portada-nombre"></strong>
+            </div>
         </div>
     </div>
 </section>
@@ -55,7 +58,9 @@
         <p>Abre una unidad para ver las tareas subidas en cada semana.</p>
     </div>
 
-    <div class="cursos" id="cursos"></div>
+    <div class="cursos" id="cursos">
+        <div class="vacio">Cargando cursos...</div>
+    </div>
 
     <div class="encabezado-seccion">
         <h2 id="curso-titulo">Contenido del curso</h2>
@@ -68,10 +73,9 @@
 </main>
 
 <footer class="pie">
-    Mi Portafolio · Universidad Peruana Los Andes · <span id="anio"></span>
+    Mi Portafolio · Universidad Peruana Los Andes · <span id="anio-actual"></span>
 </footer>
 
-<script src="js/datos.js"></script>
-<script src="js/main.js"></script>
+<script type="module" src="js/main.js"></script>
 </body>
 </html>

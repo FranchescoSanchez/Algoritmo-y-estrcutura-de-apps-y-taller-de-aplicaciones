@@ -12,26 +12,26 @@
 </head>
 <body>
 
-<header class="barra" id="barra"></header>
+<div id="barra"></div>
 
-<main class="contenedor">
+<main class="contenedor" id="panel" style="display:none">
 
     <div class="panel-cabecera">
         <div class="panel-perfil">
-            <img src="img/perfil.jpg" alt="Foto de perfil" class="foto-perfil-panel">
+            <img src="img/perfil.jpg" alt="Foto de perfil" class="foto-perfil-panel" id="panel-foto">
             <div>
-                <h1 id="saludo">Hola</h1>
-                <div class="correo" id="correo-usuario"></div>
-                <div class="presentacion-corta">Estudiante de Ingeniería de Sistemas y Computación — III Ciclo</div>
+                <h1>Hola, <span id="panel-nombre"></span></h1>
+                <div class="correo" id="panel-correo"></div>
+                <div class="presentacion-corta" id="panel-presentacion"></div>
             </div>
         </div>
         <div class="dato">
-            <span class="cifra" id="total-tareas">0</span>
+            <span class="cifra" id="panel-total">0</span>
             <span class="etiqueta">Tareas subidas</span>
         </div>
     </div>
 
-    <div id="mensaje"></div>
+    <div id="aviso-contenedor"></div>
 
     <section class="bloque">
         <h2>Subir una tarea</h2>
@@ -41,7 +41,9 @@
             <div class="rejilla-campos">
                 <div class="campo">
                     <label for="curso">Curso</label>
-                    <select id="curso" name="curso" required></select>
+                    <select id="curso" name="curso" required>
+                        
+                    </select>
                 </div>
 
                 <div class="campo">
@@ -66,29 +68,30 @@
             <div class="campo" style="margin-top:16px">
                 <label for="archivo">Archivo(s)</label>
                 <input type="file" id="archivo" name="archivo" multiple required>
-                <p class="ayuda">Puedes seleccionar varios a la vez (imágenes, código .java, PDF,
-                    Word, comprimidos, etc.) — todos se guardan en la misma unidad y semana que
-                    elijas arriba. Los archivos se guardan en el navegador (localStorage), así
-                    que evita archivos muy pesados.</p>
+                <p class="ayuda">Hasta <span id="max-mb">25</span> MB por archivo. Puedes seleccionar varios a la vez
+                    (imágenes, código .java, PDF, Word, comprimidos, etc.) — todos se
+                    guardan en la misma unidad y semana que elijas arriba.</p>
             </div>
 
-            <button type="submit" class="btn">Subir tarea</button>
+            <button type="submit" class="btn" id="btn-subir">Subir tarea</button>
         </form>
     </section>
 
     <section class="bloque">
         <h2>Tus tareas</h2>
         <p class="descripcion">Todo lo que has subido, ordenado por curso, unidad y semana.</p>
-        <div id="lista-tareas"></div>
+
+        <div id="lista-mis-tareas">
+            <div class="vacio">Cargando tus tareas...</div>
+        </div>
     </section>
 
 </main>
 
 <footer class="pie">
-    Mi Portafolio · Universidad Peruana Los Andes · <span id="anio"></span>
+    Mi Portafolio · Universidad Peruana Los Andes · <span id="anio-actual"></span>
 </footer>
 
-<script src="js/datos.js"></script>
-<script src="js/dashboard.js"></script>
+<script type="module" src="js/dashboard.js"></script>
 </body>
 </html>
