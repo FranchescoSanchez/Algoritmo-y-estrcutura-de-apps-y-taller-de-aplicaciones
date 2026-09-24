@@ -1,67 +1,98 @@
--- =====================================================================
---  Mi Portafolio · configuracion de Supabase
---
---  Pega TODO este archivo en: Supabase -> SQL Editor -> New query -> Run
---
---  ANTES de ejecutarlo, cambia PEGA_AQUI_TU_UID (mas abajo) por el UID
---  de tu usuario (Authentication -> Users -> columna "User UID").
---  Si te olvidas, el editor mostrara un error de tipo uuid y no se crea
---  nada (asi nunca queda abierto por accidente).
---
---  Resultado: cualquiera puede VER las tareas, pero solo TU cuenta puede
---  subir, editar o borrar.
--- =====================================================================
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subir tareas · Mi Portafolio UPLA</title>
+    <link rel="icon" href="img/upla-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Karla:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
 
--- 1) Quien es el dueno del portafolio --------------------------------
-create or replace function public.es_dueno()
-returns boolean
-language sql
-stable
-set search_path = ''
-as $$
-  select auth.uid() = 'f2d20dc1-ee26-47ac-8975-f0921e878b8c'::uuid
-$$;
+<div id="barra"></div>
 
--- 2) Tabla de tareas ---------------------------------------------------
-create table if not exists public.tareas (
-  id              uuid primary key default gen_random_uuid(),
-  curso           text        not null,
-  unidad          integer     not null check (unidad between 1 and 4),
-  semana          integer     not null check (semana between 1 and 4),
-  titulo          text,
-  nombre_original text        not null,
-  tipo_mime       text,
-  tamano          bigint,
-  ruta            text        not null,          -- ruta del archivo dentro del bucket
-  fecha_subida    timestamptz not null default now()
-);
+<main class="contenedor" id="panel" style="display:none">
 
-create index if not exists idx_tareas_ubicacion on public.tareas (curso, unidad, semana);
+    <div class="panel-cabecera">
+        <div class="panel-perfil">
+            <img src="img/perfil.jpg" alt="Foto de perfil" class="foto-perfil-panel" id="panel-foto">
+            <div>
+                <h1>Hola, <span id="panel-nombre"></span></h1>
+                <div class="correo" id="panel-correo"></div>
+                <div class="presentacion-corta" id="panel-presentacion"></div>
+            </div>
+        </div>
+        <div class="dato">
+            <span class="cifra" id="panel-total">0</span>
+            <span class="etiqueta">Tareas subidas</span>
+        </div>
+    </div>
 
-alter table public.tareas enable row level security;
+    <div id="aviso-contenedor"></div>
 
-drop policy if exists "todos ven las tareas"     on public.tareas;
-drop policy if exists "solo el dueno inserta"    on public.tareas;
-drop policy if exists "solo el dueno modifica"   on public.tareas;
-drop policy if exists "solo el dueno borra"      on public.tareas;
+    <section class="bloque">
+        <h2>Subir una tarea</h2>
+        <p class="descripcion">Indica a qué curso, unidad y semana pertenece el archivo.</p>
 
-create policy "todos ven las tareas"   on public.tareas for select to anon, authenticated using (true);
-create policy "solo el dueno inserta"  on public.tareas for insert to authenticated with check (public.es_dueno());
-create policy "solo el dueno modifica" on public.tareas for update to authenticated using (public.es_dueno()) with check (public.es_dueno());
-create policy "solo el dueno borra"    on public.tareas for delete to authenticated using (public.es_dueno());
+        <form id="form-subir">
+            <div class="rejilla-campos">
+                <div class="campo">
+                    <label for="curso">Curso</label>
+                    <select id="curso" name="curso" required>
+                        
+                    </select>
+                </div>
 
--- 3) Bucket de archivos (publico para leer; 25 MB por archivo) ---------
-insert into storage.buckets (id, name, public, file_size_limit)
-values ('portafolio-archivos', 'portafolio-archivos', true, 26214400)
-on conflict (id) do update set public = true, file_size_limit = 26214400;
+                <div class="campo">
+                    <label for="unidad">Unidad</label>
+                    <select id="unidad" name="unidad" required></select>
+                </div>
 
-drop policy if exists "dueno ve archivos"   on storage.objects;
-drop policy if exists "dueno sube archivos" on storage.objects;
-drop policy if exists "dueno borra archivos" on storage.objects;
+                <div class="campo">
+                    <label for="semana">Semana</label>
+                    <select id="semana" name="semana" required></select>
+                </div>
 
-create policy "dueno ve archivos"    on storage.objects for select to authenticated
-  using (bucket_id = 'portafolio-archivos' and public.es_dueno());
-create policy "dueno sube archivos"  on storage.objects for insert to authenticated
-  with check (bucket_id = 'portafolio-archivos' and public.es_dueno());
-create policy "dueno borra archivos" on storage.objects for delete to authenticated
-  using (bucket_id = 'portafolio-archivos' and public.
+                <div class="campo">
+                    <label for="titulo">Título de la tarea</label>
+                    <input type="text" id="titulo" name="titulo"
+                           placeholder="Ej. Ejercicios de arreglos">
+                    <p class="ayuda">Si lo dejas vacío usamos el nombre de cada archivo.
+                        Si subes varios, este título se usa como prefijo común.</p>
+                </div>
+            </div>
+
+            <div class="campo" style="margin-top:16px">
+                <label for="archivo">Archivo(s)</label>
+                <input type="file" id="archivo" name="archivo" multiple required>
+                <p class="ayuda">Hasta <span id="max-mb">25</span> MB por archivo. Puedes seleccionar varios a la vez
+                    (imágenes, código .java, PDF, Word, comprimidos, etc.) — todos se
+                    guardan en la misma unidad y semana que elijas arriba.</p>
+            </div>
+
+            <button type="submit" class="btn" id="btn-subir">Subir tarea</button>
+        </form>
+    </section>
+
+    <section class="bloque">
+        <h2>Tus tareas</h2>
+        <p class="descripcion">Todo lo que has subido, ordenado por curso, unidad y semana.</p>
+
+        <div id="lista-mis-tareas">
+            <div class="vacio">Cargando tus tareas...</div>
+        </div>
+    </section>
+
+</main>
+
+<footer class="pie">
+    Mi Portafolio · Universidad Peruana Los Andes · <span id="anio-actual"></span>
+</footer>
+
+<script type="module" src="js/dashboard.js"></script>
+</body>
+</html>
+
