@@ -29,10 +29,11 @@ create table if not exists public.tareas (
   unidad          integer     not null check (unidad between 1 and 4),
   semana          integer     not null check (semana between 1 and 4),
   titulo          text,
+  ejercicio       text,                              -- etiqueta para separar varios ejercicios dentro de la misma semana (ej. "Ejercicio 1")
   nombre_original text        not null,
   tipo_mime       text,
   tamano          bigint,
-  ruta            text        not null,          -- ruta del archivo dentro del bucket
+  ruta            text        not null,
   fecha_subida    timestamptz not null default now()
 );
 
