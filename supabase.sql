@@ -37,9 +37,9 @@ create table if not exists public.tareas (
   fecha_subida    timestamptz not null default now()
 );
 
-create index if not exists idx_tareas_ubicacion on public.tareas (curso, unidad, semana);
+alter table public.tareas add column if not exists ejercicio text;
 
-alter table public.tareas enable row level security;
+create index if not exists idx_tareas_ubicacion on public.tareas (curso, unidad, semana);
 
 drop policy if exists "todos ven las tareas"     on public.tareas;
 drop policy if exists "solo el dueno inserta"    on public.tareas;
