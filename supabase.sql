@@ -29,17 +29,16 @@ create table if not exists public.tareas (
   unidad          integer     not null check (unidad between 1 and 4),
   semana          integer     not null check (semana between 1 and 4),
   titulo          text,
-  ejercicio       text,                              -- etiqueta para separar varios ejercicios dentro de la misma semana (ej. "Ejercicio 1")
   nombre_original text        not null,
   tipo_mime       text,
   tamano          bigint,
-  ruta            text        not null,
+  ruta            text        not null,          -- ruta del archivo dentro del bucket
   fecha_subida    timestamptz not null default now()
 );
 
-alter table public.tareas add column if not exists ejercicio text;
-
 create index if not exists idx_tareas_ubicacion on public.tareas (curso, unidad, semana);
+
+alter table public.tareas enable row level security;
 
 drop policy if exists "todos ven las tareas"     on public.tareas;
 drop policy if exists "solo el dueno inserta"    on public.tareas;
