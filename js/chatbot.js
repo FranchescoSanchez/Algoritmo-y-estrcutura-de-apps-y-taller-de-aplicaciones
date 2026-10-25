@@ -59,8 +59,7 @@ function pintar(rol, contenido) {
     return burbuja;
 }
 
-pintar("bot", "¡Hola! Pregúntame por las tareas del portafolio, qué semanas faltan o los temas de los cursos.");
-
+pintar("bot", "¡Hola! ¿En qué te puedo ayudar?");
 async function enviar(pregunta) {
     pregunta = (pregunta || texto.value).trim();
     if (!pregunta || ocupado) return;
