@@ -2,7 +2,7 @@
    Panel privado: subir y borrar tareas.
    Si no hay sesion iniciada, te lleva a login.html.
    ========================================================== */
-import { CURSOS, UNIDADES, SEMANAS_POR_UNIDAD, PERFIL, MAX_MB } from "./config.js";
+import { CURSOS, UNIDADES, SEMANAS_POR_UNIDAD, PERFIL, MAX_MB, semanaMostrada } from "./config.js";
 import { supabaseListo, alCambiarSesion, explicarError } from "./supabase.js";
 import { listarTodas, subirArchivo, eliminarTarea, urlDeVista, urlDeDescarga } from "./archivos.js";
 import { escapar, pesoLegible, nombreDeCurso, ponerAnio } from "./util.js";
