@@ -65,7 +65,7 @@ async function cargarCurso(slug) {
             for (let s = 1; s <= SEMANAS_POR_UNIDAD; s++) {
                 const archivos = porSemana[u + "-" + s] || [];
                 if (archivos.length > 0) entregadasEnUnidad++;
-                semanas.push({ numero: s, archivos });
+                semanas.push({ numero: semanaMostrada(u, s), archivos });
             }
             semanasEntregadas += entregadasEnUnidad;
             html += dibujarUnidad({ numero: u, semanasEntregadas: entregadasEnUnidad, semanas });
