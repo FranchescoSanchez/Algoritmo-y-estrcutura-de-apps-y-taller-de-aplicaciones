@@ -31,6 +31,9 @@ export const CURSOS = [
 ];
 export const UNIDADES = 4;
 export const SEMANAS_POR_UNIDAD = 4;
+export function semanaMostrada(unidad, semana) {
+    return (unidad - 1) * SEMANAS_POR_UNIDAD + semana;
+}
 
 /* 4) Tamano maximo por archivo. Debe coincidir con file_size_limit de
    supabase.sql (25 MB). El plan gratis de Supabase permite hasta 50 MB. */
