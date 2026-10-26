@@ -159,7 +159,7 @@ function dibujarTarea(t) {
                <span class="tarea-icono">U${t.unidad}S${semanaMostrada(t.unidad, t.semana)}</span>
         <span class="tarea-info">
           <span class="titulo">${escapar(t.titulo || t.nombreOriginal)}</span>
-          <span class="meta">Unidad ${t.unidad} &middot; Semana ${t.semana} &middot; ${pesoLegible(t.tamano)}</span>
+                   <span class="meta">Unidad ${t.unidad} &middot; Semana ${semanaMostrada(t.unidad, t.semana)} &middot; ${pesoLegible(t.tamano)}</span>
         </span>
         <span class="tarea-acciones">
           <a class="btn btn-linea btn-mini" href="${escapar(urlDeVista(t))}" target="_blank" rel="noopener">Ver</a>
