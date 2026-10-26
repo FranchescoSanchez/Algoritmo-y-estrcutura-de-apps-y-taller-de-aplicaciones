@@ -2,7 +2,7 @@
    Panel privado: subir y borrar tareas.
    Si no hay sesion iniciada, te lleva a login.html.
    ========================================================== */
-import { CURSOS, UNIDADES, SEMANAS_POR_UNIDAD, PERFIL, MAX_MB, semanaMostrada } from "./config.js";
+import { CURSOS, UNIDADES, SEMANAS_POR_UNIDAD, PERFIL, MAX_MB } from "./config.js";
 import { supabaseListo, alCambiarSesion, explicarError } from "./supabase.js";
 import { listarTodas, subirArchivo, eliminarTarea, urlDeVista, urlDeDescarga } from "./archivos.js";
 import { escapar, pesoLegible, nombreDeCurso, ponerAnio } from "./util.js";
@@ -38,18 +38,9 @@ function iniciarPanel(usuario) {
     panelIniciado = true;
 
     llenarSelects();
-        const pintarSemanas = () => {
-        const u = Number(unidad.value) || 1;
-        const elegida = semana.value;
-        semana.innerHTML = "";
-        for (let s = 1; s <= SEMANAS_POR_UNIDAD; s++) {
-            semana.insertAdjacentHTML("beforeend", `<option value="${s}">Semana ${semanaMostrada(unidad, semana)}.
-        }
-        if (elegida) semana.value = elegida;
-    };
-    unidad.addEventListener("change", pintarSemanas);
-    unidad.form.addEventListener("reset", () => setTimeout(pintarSemanas));
-    pintarSemanas();
+    document.getElementById("form-subir").addEventListener("submit", alSubir);
+    document.getElementById("lista-mis-tareas").addEventListener("click", alPulsarBoton);
+    cargarMisTareas();
 }
 
 function llenarSelects() {
@@ -156,10 +147,10 @@ async function cargarMisTareas() {
 function dibujarTarea(t) {
     return `
       <div class="tarea">
-               <span class="tarea-icono">U${t.unidad}S${semanaMostrada(t.unidad, t.semana)}</span>
+        <span class="tarea-icono">U${t.unidad}S${t.semana}</span>
         <span class="tarea-info">
           <span class="titulo">${escapar(t.titulo || t.nombreOriginal)}</span>
-                   <span class="meta">Unidad ${t.unidad} &middot; Semana ${semanaMostrada(t.unidad, t.semana)} &middot; ${pesoLegible(t.tamano)}</span>
+          <span class="meta">Unidad ${t.unidad} &middot; Semana ${t.semana} &middot; ${pesoLegible(t.tamano)}</span>
         </span>
         <span class="tarea-acciones">
           <a class="btn btn-linea btn-mini" href="${escapar(urlDeVista(t))}" target="_blank" rel="noopener">Ver</a>
