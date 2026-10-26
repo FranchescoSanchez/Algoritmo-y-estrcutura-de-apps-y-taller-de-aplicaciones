@@ -2,7 +2,7 @@
    Portafolio publico: curso -> 4 unidades -> 4 semanas -> tareas.
    No pide iniciar sesion: cualquiera con el enlace lo ve.
    ========================================================== */
-import { CURSOS, UNIDADES, SEMANAS_POR_UNIDAD, PERFIL } from "./config.js";
+import { CURSOS, UNIDADES, SEMANAS_POR_UNIDAD, PERFIL, semanaMostrada } from "./config.js";
 import { supabaseListo, explicarError, avisoConfiguracion } from "./supabase.js";
 import { listarPorCurso, urlDeVista, urlDeDescarga } from "./archivos.js";
 import { escapar, pesoLegible, extension, ponerAnio } from "./util.js";
