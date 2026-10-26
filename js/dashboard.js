@@ -156,7 +156,7 @@ async function cargarMisTareas() {
 function dibujarTarea(t) {
     return `
       <div class="tarea">
-        <span class="tarea-icono">U${t.unidad}S${t.semana}</span>
+               <span class="tarea-icono">U${t.unidad}S${semanaMostrada(t.unidad, t.semana)}</span>
         <span class="tarea-info">
           <span class="titulo">${escapar(t.titulo || t.nombreOriginal)}</span>
           <span class="meta">Unidad ${t.unidad} &middot; Semana ${t.semana} &middot; ${pesoLegible(t.tamano)}</span>
