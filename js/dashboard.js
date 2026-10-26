@@ -38,9 +38,18 @@ function iniciarPanel(usuario) {
     panelIniciado = true;
 
     llenarSelects();
-    document.getElementById("form-subir").addEventListener("submit", alSubir);
-    document.getElementById("lista-mis-tareas").addEventListener("click", alPulsarBoton);
-    cargarMisTareas();
+        const pintarSemanas = () => {
+        const u = Number(unidad.value) || 1;
+        const elegida = semana.value;
+        semana.innerHTML = "";
+        for (let s = 1; s <= SEMANAS_POR_UNIDAD; s++) {
+            semana.insertAdjacentHTML("beforeend", `<option value="${s}">Semana ${semanaMostrada(u, s)}</option>`);
+        }
+        if (elegida) semana.value = elegida;
+    };
+    unidad.addEventListener("change", pintarSemanas);
+    unidad.form.addEventListener("reset", () => setTimeout(pintarSemanas));
+    pintarSemanas();
 }
 
 function llenarSelects() {
