@@ -43,7 +43,7 @@ function iniciarPanel(usuario) {
         const elegida = semana.value;
         semana.innerHTML = "";
         for (let s = 1; s <= SEMANAS_POR_UNIDAD; s++) {
-            semana.insertAdjacentHTML("beforeend", `<option value="${s}">Semana ${semanaMostrada(u, s)}</option>`);
+            semana.insertAdjacentHTML("beforeend", `<option value="${s}">Semana ${semanaMostrada(unidad, semana)}.
         }
         if (elegida) semana.value = elegida;
     };
