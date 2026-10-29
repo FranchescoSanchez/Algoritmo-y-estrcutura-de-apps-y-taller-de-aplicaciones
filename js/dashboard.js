@@ -4,7 +4,7 @@
    ========================================================== */
 import { CURSOS, UNIDADES, SEMANAS_POR_UNIDAD, PERFIL, MAX_MB } from "./config.js";
 import { supabaseListo, alCambiarSesion, explicarError } from "./supabase.js";
-import { listarTodas, subirArchivo, eliminarTarea, urlDeVista, urlDeDescarga } from "./archivos.js";
+import { listarTodas, subirArchivo, eliminarTarea, actualizarTituloTarea, urlDeVista, urlDeDescarga } from "./archivos.js";
 import { escapar, pesoLegible, nombreDeCurso, ponerAnio } from "./util.js";
 import { guardarNombreSemana } from "./semanas.js";
 import "./barra.js";
@@ -193,14 +193,36 @@ function dibujarTarea(t) {
         <span class="tarea-acciones">
           <a class="btn btn-linea btn-mini" href="${escapar(urlDeVista(t))}" target="_blank" rel="noopener">Ver</a>
           <a class="btn btn-linea btn-mini" href="${escapar(urlDeDescarga(t))}">Descargar</a>
+          <button class="btn btn-linea btn-mini" type="button" data-accion="editar" data-id="${escapar(t.id)}">Editar nombre</button>
           <button class="btn btn-riesgo btn-mini" type="button" data-accion="eliminar" data-id="${escapar(t.id)}">Eliminar</button>
         </span>
       </div>`;
 }
 
 async function alPulsarBoton(ev) {
-    const boton = ev.target.closest("button[data-accion='eliminar']");
+    const boton = ev.target.closest("button[data-accion]");
     if (!boton) return;
+    if (boton.dataset.accion === "editar") {
+        const tarea = misTareas.get(boton.dataset.id);
+        if (!tarea) return;
+        const nuevo = prompt("Escribe el nuevo nombre de la actividad:", tarea.titulo || tarea.nombreOriginal);
+        if (nuevo === null) return;
+        if (!nuevo.trim()) {
+            mostrar("error", "El nombre de la actividad no puede estar vacío.");
+            return;
+        }
+        boton.disabled = true;
+        try {
+            await actualizarTituloTarea(tarea.id, nuevo);
+            await cargarMisTareas();
+            mostrar("exito", "Nombre de la actividad actualizado. El archivo original sigue intacto.");
+        } catch (e) {
+            mostrar("error", explicarError(e));
+            boton.disabled = false;
+        }
+        return;
+    }
+    if (boton.dataset.accion !== "eliminar") return;
     const tarea = misTareas.get(boton.dataset.id);
     if (!tarea) return;
 
