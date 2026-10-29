@@ -37,8 +37,13 @@ export async function listarPorCurso(slug) {
 }
 
 export async function listarTodas() {
+    // Lista agrupada por curso, unidad y semana; dentro de cada semana, lo más reciente primero.
     const filas = datosDe(await supabase.from("tareas").select(COLUMNAS)
-        .order("curso").order("unidad").order("semana").order("fecha_subida", { ascending: false }));
+        .order("curso", { ascending: true })
+        .order("unidad", { ascending: true })
+        .order("semana", { ascending: true })
+        .order("fecha_subida", { ascending: false })
+        .order("titulo", { ascending: true }));
     return filas.map(aTarea);
 }
 
