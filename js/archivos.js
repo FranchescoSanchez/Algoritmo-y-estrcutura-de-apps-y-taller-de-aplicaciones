@@ -37,14 +37,24 @@ export async function listarPorCurso(slug) {
 }
 
 export async function listarTodas() {
-    // Lista agrupada por curso, unidad y semana; dentro de cada semana, lo más reciente primero.
+    // Agrupa por curso, unidad y semana; ordena los títulos de forma natural:
+    // Ejercicio 1, Ejercicio 2 ... Ejercicio 10 (no Ejercicio 1, Ejercicio 10, Ejercicio 2).
     const filas = datosDe(await supabase.from("tareas").select(COLUMNAS)
         .order("curso", { ascending: true })
         .order("unidad", { ascending: true })
-        .order("semana", { ascending: true })
-        .order("fecha_subida", { ascending: false })
-        .order("titulo", { ascending: true }));
-    return filas.map(aTarea);
+        .order("semana", { ascending: true }));
+    return filas.map(aTarea).sort((a, b) => {
+        const curso = String(a.curso || "").localeCompare(String(b.curso || ""));
+        if (curso) return curso;
+        if (Number(a.unidad) !== Number(b.unidad)) return Number(a.unidad) - Number(b.unidad);
+        if (Number(a.semana) !== Number(b.semana)) return Number(a.semana) - Number(b.semana);
+        const titulo = String(a.titulo || a.nombreOriginal || "").localeCompare(
+            String(b.titulo || b.nombreOriginal || ""), "es",
+            { numeric: true, sensitivity: "base" }
+        );
+        if (titulo) return titulo;
+        return String(b.fechaSubida || "").localeCompare(String(a.fechaSubida || ""));
+    });
 }
 
 /** Sube el archivo a Storage y despues registra la tarea en la tabla. */
