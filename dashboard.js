@@ -6,6 +6,7 @@ import { CURSOS, UNIDADES, SEMANAS_POR_UNIDAD, PERFIL, MAX_MB } from "./config.j
 import { supabaseListo, alCambiarSesion, explicarError } from "./supabase.js";
 import { listarTodas, subirArchivo, eliminarTarea, urlDeVista, urlDeDescarga } from "./archivos.js";
 import { escapar, pesoLegible, nombreDeCurso, ponerAnio } from "./util.js";
+import { guardarNombreSemana } from "./semanas.js";
 import "./barra.js";
 
 const misTareas = new Map();
@@ -38,6 +39,8 @@ function iniciarPanel(usuario) {
     panelIniciado = true;
 
     llenarSelects();
+    llenarSelectsNombresSemana();
+    document.getElementById("form-nombre-semana").addEventListener("submit", guardarNombreSemanaDesdePanel);
     document.getElementById("form-subir").addEventListener("submit", alSubir);
     document.getElementById("lista-mis-tareas").addEventListener("click", alPulsarBoton);
     cargarMisTareas();
@@ -54,6 +57,42 @@ function llenarSelects() {
     }
     for (let s = 1; s <= SEMANAS_POR_UNIDAD; s++) {
         semana.insertAdjacentHTML("beforeend", `<option value="${s}">Semana ${s}</option>`);
+    }
+}
+
+function llenarSelectsNombresSemana() {
+    const curso = document.getElementById("nombre-curso");
+    const unidad = document.getElementById("nombre-unidad");
+    const semana = document.getElementById("nombre-semana-numero");
+    curso.innerHTML = CURSOS.map((c) => `<option value="${escapar(c.slug)}">${escapar(c.nombre)}</option>`).join("");
+    unidad.innerHTML = Array.from({ length: UNIDADES }, (_, i) => i + 1)
+        .map((n) => `<option value="${n}">Unidad ${n}</option>`).join("");
+    semana.innerHTML = Array.from({ length: SEMANAS_POR_UNIDAD }, (_, i) => i + 1)
+        .map((n) => `<option value="${n}">Semana ${(Number(unidad.value || 1) - 1) * SEMANAS_POR_UNIDAD + n}</option>`).join("");
+    unidad.addEventListener("change", actualizarOpcionesSemanaNombre);
+}
+function actualizarOpcionesSemanaNombre() {
+    const unidad = Number(document.getElementById("nombre-unidad").value);
+    document.getElementById("nombre-semana-numero").innerHTML =
+        Array.from({ length: SEMANAS_POR_UNIDAD }, (_, i) => i + 1)
+            .map((n) => `<option value="${n}">Semana ${(unidad - 1) * SEMANAS_POR_UNIDAD + n}</option>`).join("");
+}
+async function guardarNombreSemanaDesdePanel(ev) {
+    ev.preventDefault();
+    const boton = document.getElementById("btn-guardar-semana");
+    boton.disabled = true;
+    try {
+        await guardarNombreSemana({
+            curso: document.getElementById("nombre-curso").value,
+            unidad: Number(document.getElementById("nombre-unidad").value),
+            semana: Number(document.getElementById("nombre-semana-numero").value),
+            nombre: document.getElementById("nombre-semana-texto").value
+        });
+        mostrar("exito", "Nombre de la semana guardado. Ya se mostrará en la página pública.");
+    } catch (e) {
+        mostrar("error", "No se pudo guardar el nombre. Ejecuta primero sql/nombres-semanas.sql en Supabase. " + explicarError(e));
+    } finally {
+        boton.disabled = false;
     }
 }
 
