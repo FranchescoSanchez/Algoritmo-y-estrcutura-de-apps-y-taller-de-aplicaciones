@@ -80,6 +80,21 @@ export async function subirArchivo(archivo, datos) {
     return data.id;
 }
 
+/** Actualiza solo el título visible de una tarea; conserva el archivo y su ruta. */
+export async function actualizarTituloTarea(id, titulo) {
+    const { data, error } = await supabase.from("tareas")
+        .update({ titulo: titulo.trim() })
+        .eq("id", id)
+        .select("id, titulo");
+    if (error) throw error;
+    if (!data || data.length === 0) {
+        const sinPermiso = new Error("row-level security: no se actualizó ninguna fila");
+        sinPermiso.code = "42501";
+        throw sinPermiso;
+    }
+    return data[0];
+}
+
 /** Borra la tarea (desaparece del portafolio) y despues su archivo. */
 export async function eliminarTarea(tarea) {
     const { data, error } = await supabase.from("tareas").delete().eq("id", tarea.id).select("id");
