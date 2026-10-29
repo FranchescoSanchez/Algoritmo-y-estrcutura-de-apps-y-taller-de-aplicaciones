@@ -604,11 +604,12 @@ a:hover { color: var(--upla-profundo); }
 .chat-abrir {
     position: fixed; right: 20px; bottom: 20px; z-index: 50;
     display: flex; align-items: center; gap: 8px;
-    padding: 12px 18px; border: 0; border-radius: 999px; cursor: pointer;
-    background: var(--upla); color: var(--blanco); font: 700 .95rem Karla, sans-serif;
+    padding: 6px 18px 6px 7px; border: 2px solid #3544dc; border-radius: 999px; cursor: pointer;
+    background: var(--blanco); color: #3544dc; font: 700 .95rem Karla, sans-serif;
     box-shadow: var(--sombra-alta);
 }
-.chat-abrir:hover { background: var(--upla-profundo); }
+.chat-abrir:hover { background: #f1f2ff; }
+.chat-abrir .chat-logo { display: block; width: 42px; height: 42px; object-fit: contain; flex: 0 0 42px; }
 body.chat-activo .chat-abrir { display: none; }
 
 .chat-panel {
