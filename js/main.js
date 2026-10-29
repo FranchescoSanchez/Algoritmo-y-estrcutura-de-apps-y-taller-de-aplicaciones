@@ -6,6 +6,7 @@ import { CURSOS, UNIDADES, SEMANAS_POR_UNIDAD, PERFIL, semanaMostrada } from "./
 import { supabaseListo, explicarError, avisoConfiguracion } from "./supabase.js";
 import { listarPorCurso, urlDeVista, urlDeDescarga } from "./archivos.js";
 import { escapar, pesoLegible, extension, ponerAnio } from "./util.js";
+import { listarNombresSemanas } from "./semanas.js";
 import "./barra.js";
 
 ponerAnio();
@@ -52,6 +53,8 @@ async function cargarCurso(slug) {
 
     try {
         const tareas = await listarPorCurso(slug);
+        let nombresSemanas = [];
+        try { nombresSemanas = await listarNombresSemanas(); } catch (_) { /* La página sigue funcionando si aún no se creó la tabla. */ }
         const porSemana = {};
         tareas.forEach((t) => {
             (porSemana[t.unidad + "-" + t.semana] ||= []).push(t);
@@ -65,7 +68,9 @@ async function cargarCurso(slug) {
             for (let s = 1; s <= SEMANAS_POR_UNIDAD; s++) {
                 const archivos = porSemana[u + "-" + s] || [];
                 if (archivos.length > 0) entregadasEnUnidad++;
-                semanas.push({ numero: semanaMostrada(u, s), archivos });
+                const numero = semanaMostrada(u, s);
+                const registroNombre = nombresSemanas.find((n) => n.curso === slug && Number(n.unidad) === u && Number(n.semana) === s);
+                semanas.push({ numero, nombre: registroNombre?.nombre || "", archivos });
             }
             semanasEntregadas += entregadasEnUnidad;
             html += dibujarUnidad({ numero: u, semanasEntregadas: entregadasEnUnidad, semanas });
@@ -121,7 +126,7 @@ function dibujarSemana(semana) {
     return `
       <div class="semana">
         <div class="semana-cabecera">
-          <span class="semana-numero">Semana ${semana.numero}</span>
+          <span class="semana-numero">Semana ${semana.numero}${semana.nombre ? ": " + escapar(semana.nombre) : ""}</span>
           ${insignia}
         </div>
         ${contenido}
