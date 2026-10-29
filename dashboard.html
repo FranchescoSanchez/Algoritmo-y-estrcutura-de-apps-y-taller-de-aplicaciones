@@ -78,6 +78,33 @@
     </section>
 
     <section class="bloque">
+        <h2>Editar nombres de semanas</h2>
+        <p class="descripcion">Escribe un tema para cada semana, por ejemplo: “Pilas y recursividad”. El nombre se mostrará también en la página pública.</p>
+        <form id="form-nombre-semana">
+            <div class="rejilla-campos">
+                <div class="campo">
+                    <label for="nombre-curso">Curso</label>
+                    <select id="nombre-curso" required></select>
+                </div>
+                <div class="campo">
+                    <label for="nombre-unidad">Unidad</label>
+                    <select id="nombre-unidad" required></select>
+                </div>
+                <div class="campo">
+                    <label for="nombre-semana-numero">Semana</label>
+                    <select id="nombre-semana-numero" required></select>
+                </div>
+                <div class="campo">
+                    <label for="nombre-semana-texto">Nombre o tema de la semana</label>
+                    <input id="nombre-semana-texto" maxlength="120" placeholder="Ej. Pilas y recursividad">
+                </div>
+            </div>
+            <button type="submit" class="btn" id="btn-guardar-semana" style="margin-top:16px">Guardar nombre</button>
+            <p class="ayuda">Deja el nombre vacío para volver a mostrar solo “Semana X”.</p>
+        </form>
+    </section>
+
+    <section class="bloque">
         <h2>Tus tareas</h2>
         <p class="descripcion">Todo lo que has subido, ordenado por curso, unidad y semana.</p>
 
