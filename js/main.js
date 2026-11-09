@@ -134,16 +134,17 @@ function dibujarSemana(semana) {
 }
 
 function dibujarTarea(t) {
+    const esEnlace = t.tipoRecurso === "enlace";
     return `
       <div class="tarea">
-        <span class="tarea-icono">${escapar(extension(t.nombreOriginal))}</span>
+        <span class="tarea-icono">${esEnlace ? "URL" : escapar(extension(t.nombreOriginal))}</span>
         <span class="tarea-info">
           <span class="titulo">${escapar(t.titulo || t.nombreOriginal)}</span>
-          <span class="meta">${escapar(t.nombreOriginal)} &middot; ${pesoLegible(t.tamano)}</span>
+          <span class="meta">${esEnlace ? "Enlace externo" : escapar(t.nombreOriginal) + " &middot; " + pesoLegible(t.tamano)}</span>
         </span>
         <span class="tarea-acciones">
-          <a class="btn btn-linea btn-mini" href="${escapar(urlDeVista(t))}" target="_blank" rel="noopener">Ver</a>
-          <a class="btn btn-mini" href="${escapar(urlDeDescarga(t))}">Descargar</a>
+          <a class="btn btn-linea btn-mini" href="${escapar(urlDeVista(t))}" target="_blank" rel="noopener">${esEnlace ? "Abrir enlace" : "Ver"}</a>
+          ${esEnlace ? "" : `<a class="btn btn-mini" href="${escapar(urlDeDescarga(t))}">Descargar</a>`}
         </span>
       </div>`;
 }
