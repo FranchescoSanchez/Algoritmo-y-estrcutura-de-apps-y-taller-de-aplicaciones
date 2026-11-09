@@ -4,7 +4,7 @@
    ========================================================== */
 import { CURSOS, UNIDADES, SEMANAS_POR_UNIDAD, PERFIL, MAX_MB } from "./config.js";
 import { supabaseListo, alCambiarSesion, explicarError } from "./supabase.js";
-import { listarTodas, subirArchivo, eliminarTarea, actualizarTituloTarea, urlDeVista, urlDeDescarga } from "./archivos.js";
+import { listarTodas, subirArchivo, guardarEnlace, eliminarTarea, actualizarTituloTarea, urlDeVista, urlDeDescarga } from "./archivos.js";
 import { escapar, pesoLegible, nombreDeCurso, ponerAnio } from "./util.js";
 import { guardarNombreSemana } from "./semanas.js";
 import "./barra.js";
@@ -42,6 +42,8 @@ function iniciarPanel(usuario) {
     llenarSelectsNombresSemana();
     document.getElementById("form-nombre-semana").addEventListener("submit", guardarNombreSemanaDesdePanel);
     document.getElementById("form-subir").addEventListener("submit", alSubir);
+    document.getElementById("tipo-recurso").addEventListener("change", cambiarTipoRecurso);
+    cambiarTipoRecurso();
     document.getElementById("lista-mis-tareas").addEventListener("click", alPulsarBoton);
     cargarMisTareas();
 }
@@ -99,53 +101,60 @@ function mostrar(tipo, mensaje) {
     aviso.innerHTML = `<div class="aviso aviso-${tipo}">${escapar(mensaje)}</div>`;
 }
 
+function cambiarTipoRecurso() {
+    const esEnlace = document.getElementById("tipo-recurso").value === "enlace";
+    document.getElementById("campo-archivo").style.display = esEnlace ? "none" : "";
+    document.getElementById("campo-enlace").style.display = esEnlace ? "" : "none";
+    document.getElementById("archivo").required = !esEnlace;
+    document.getElementById("recurso-url").required = esEnlace;
+}
+
 async function alSubir(ev) {
     ev.preventDefault();
     aviso.innerHTML = "";
-
-    const archivos = Array.from(document.getElementById("archivo").files);
-    if (archivos.length === 0) {
-        mostrar("error", "Elige al menos un archivo para subir.");
-        return;
-    }
-
     const curso = document.getElementById("curso").value;
     const unidad = Number(document.getElementById("unidad").value);
     const semana = Number(document.getElementById("semana").value);
     const titulo = document.getElementById("titulo").value.trim();
-
     const boton = document.getElementById("btn-subir");
     boton.disabled = true;
-
+    if (document.getElementById("tipo-recurso").value === "enlace") {
+        try {
+            await guardarEnlace({ curso, unidad, semana, titulo, url: document.getElementById("recurso-url").value });
+            document.getElementById("form-subir").reset();
+            cambiarTipoRecurso();
+            await cargarMisTareas();
+            mostrar("exito", `Se agregó el enlace a la Unidad ${unidad}, Semana ${semana}.`);
+        } catch (e) { mostrar("error", explicarError(e)); }
+        finally { boton.disabled = false; boton.textContent = "Subir tarea"; }
+        return;
+    }
+    const archivos = Array.from(document.getElementById("archivo").files);
+    if (!archivos.length) {
+        mostrar("error", "Elige al menos un archivo para subir.");
+        boton.disabled = false;
+        return;
+    }
     let subidos = 0;
     const fallidos = [];
-
     for (let i = 0; i < archivos.length; i++) {
         const archivo = archivos[i];
         boton.textContent = `Subiendo ${i + 1}/${archivos.length}…`;
         try {
-            await subirArchivo(archivo, {
-                curso, unidad, semana,
-                titulo: titulo ? (archivos.length > 1 ? titulo + " – " + archivo.name : titulo) : archivo.name
-            });
+            await subirArchivo(archivo, { curso, unidad, semana,
+                titulo: titulo ? (archivos.length > 1 ? titulo + " – " + archivo.name : titulo) : archivo.name });
             subidos++;
-        } catch (e) {
-            fallidos.push(archivo.name + " (" + explicarError(e) + ")");
-        }
+        } catch (e) { fallidos.push(archivo.name + " (" + explicarError(e) + ")"); }
     }
-
     boton.disabled = false;
     boton.textContent = "Subir tarea";
-
     if (subidos > 0) {
         document.getElementById("form-subir").reset();
+        cambiarTipoRecurso();
         await cargarMisTareas();
     }
-    if (fallidos.length === 0) {
-        mostrar("exito", `Se subió ${subidos} archivo(s) a la Unidad ${unidad}, Semana ${semana}.`);
-    } else {
-        mostrar("error", (subidos ? `Se subieron ${subidos}. ` : "") + "No se pudo subir: " + fallidos.join("; "));
-    }
+    if (!fallidos.length) mostrar("exito", `Se subió ${subidos} archivo(s) a la Unidad ${unidad}, Semana ${semana}.`);
+    else mostrar("error", (subidos ? `Se subieron ${subidos}. ` : "") + "No se pudo subir: " + fallidos.join("; "));
 }
 
 async function cargarMisTareas() {
@@ -185,14 +194,14 @@ async function cargarMisTareas() {
 function dibujarTarea(t) {
     return `
       <div class="tarea">
-        <span class="tarea-icono">U${t.unidad}S${t.semana}</span>
+        <span class="tarea-icono">${t.tipoRecurso === "enlace" ? "URL" : "U" + t.unidad + "S" + t.semana}</span>
         <span class="tarea-info">
           <span class="titulo">${escapar(t.titulo || t.nombreOriginal)}</span>
-          <span class="meta">Unidad ${t.unidad} &middot; Semana ${t.semana} &middot; ${pesoLegible(t.tamano)}</span>
+          <span class="meta">Unidad ${t.unidad} &middot; Semana ${t.semana} &middot; ${t.tipoRecurso === "enlace" ? "Enlace externo" : pesoLegible(t.tamano)}</span>
         </span>
         <span class="tarea-acciones">
-          <a class="btn btn-linea btn-mini" href="${escapar(urlDeVista(t))}" target="_blank" rel="noopener">Ver</a>
-          <a class="btn btn-linea btn-mini" href="${escapar(urlDeDescarga(t))}">Descargar</a>
+          <a class="btn btn-linea btn-mini" href="${escapar(urlDeVista(t))}" target="_blank" rel="noopener">${t.tipoRecurso === "enlace" ? "Abrir enlace" : "Ver"}</a>
+          ${t.tipoRecurso === "enlace" ? "" : `<a class="btn btn-linea btn-mini" href="${escapar(urlDeDescarga(t))}">Descargar</a>`}
           <button class="btn btn-linea btn-mini" type="button" data-accion="editar" data-id="${escapar(t.id)}">Editar nombre</button>
           <button class="btn btn-riesgo btn-mini" type="button" data-accion="eliminar" data-id="${escapar(t.id)}">Eliminar</button>
         </span>
