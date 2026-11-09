@@ -7,7 +7,7 @@
 import { supabase } from "./supabase.js";
 import { BUCKET, MAX_MB } from "./config.js";
 
-const COLUMNAS = "id, curso, unidad, semana, titulo, nombre_original, tipo_mime, tamano, ruta, fecha_subida";
+const COLUMNAS = "id, curso, unidad, semana, titulo, nombre_original, tipo_mime, tamano, ruta, fecha_subida, tipo_recurso, recurso_url";
 
 function aTarea(f) {
     return {
@@ -20,7 +20,9 @@ function aTarea(f) {
         tipoMime: f.tipo_mime,
         tamano: f.tamano,
         ruta: f.ruta,
-        fechaSubida: f.fecha_subida
+        fechaSubida: f.fecha_subida,
+        tipoRecurso: f.tipo_recurso || "archivo",
+        recursoUrl: f.recurso_url || ""
     };
 }
 
@@ -95,6 +97,30 @@ export async function subirArchivo(archivo, datos) {
     return data.id;
 }
 
+/** Registra un enlace externo como una tarea, sin subir archivos a Storage. */
+export async function guardarEnlace(datos) {
+    let url;
+    try { url = new URL(String(datos.url || "").trim()); }
+    catch (_) { throw new Error("Escribe un enlace válido que comience con https:// o http://."); }
+    if (!["https:", "http:"].includes(url.protocol)) {
+        throw new Error("Solo se permiten enlaces http:// o https://.");
+    }
+    const { data, error } = await supabase.from("tareas").insert({
+        curso: datos.curso,
+        unidad: datos.unidad,
+        semana: datos.semana,
+        titulo: datos.titulo || url.hostname,
+        nombre_original: url.hostname,
+        tipo_mime: "text/uri-list",
+        tamano: 0,
+        ruta: "",
+        tipo_recurso: "enlace",
+        recurso_url: url.href
+    }).select("id").single();
+    if (error) throw error;
+    return data.id;
+}
+
 /** Actualiza solo el título visible de una tarea; conserva el archivo y su ruta. */
 export async function actualizarTituloTarea(id, titulo) {
     const { data, error } = await supabase.from("tareas")
@@ -120,16 +146,20 @@ export async function eliminarTarea(tarea) {
         sinPermiso.code = "42501";
         throw sinPermiso;
     }
-    const r = await supabase.storage.from(BUCKET).remove([tarea.ruta]);
-    if (r.error) console.warn("La tarea se borró, pero no su archivo:", r.error.message);
+    if (tarea.ruta) {
+        const r = await supabase.storage.from(BUCKET).remove([tarea.ruta]);
+        if (r.error) console.warn("La tarea se borró, pero no su archivo:", r.error.message);
+    }
 }
 
 /** Enlace para ver el archivo en el navegador (el bucket es publico). */
 export function urlDeVista(tarea) {
+    if (tarea.tipoRecurso === "enlace") return tarea.recursoUrl;
     return supabase.storage.from(BUCKET).getPublicUrl(tarea.ruta).data.publicUrl;
 }
 
 /** Enlace que fuerza la descarga con el nombre original. */
 export function urlDeDescarga(tarea) {
+    if (tarea.tipoRecurso === "enlace") return tarea.recursoUrl;
     return supabase.storage.from(BUCKET).getPublicUrl(tarea.ruta, { download: tarea.nombreOriginal }).data.publicUrl;
 }
