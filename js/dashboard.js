@@ -2,7 +2,7 @@
    Panel privado: subir y borrar tareas.
    Si no hay sesion iniciada, te lleva a login.html.
    ========================================================== */
-import { CURSOS, UNIDADES, SEMANAS_POR_UNIDAD, PERFIL, MAX_MB } from "./config.js";
+import { CURSOS, UNIDADES, SEMANAS_POR_UNIDAD, semanaMostrada, PERFIL, MAX_MB } from "./config.js";
 import { supabaseListo, alCambiarSesion, explicarError } from "./supabase.js";
 import { listarTodas, subirArchivo, guardarEnlace, eliminarTarea, actualizarTituloTarea, urlDeVista, urlDeDescarga } from "./archivos.js";
 import { escapar, pesoLegible, nombreDeCurso, ponerAnio } from "./util.js";
@@ -57,9 +57,16 @@ function llenarSelects() {
     for (let u = 1; u <= UNIDADES; u++) {
         unidad.insertAdjacentHTML("beforeend", `<option value="${u}">Unidad ${u}</option>`);
     }
-    for (let s = 1; s <= SEMANAS_POR_UNIDAD; s++) {
-        semana.insertAdjacentHTML("beforeend", `<option value="${s}">Semana ${s}</option>`);
+    function actualizarSemanasDeUnidad() {
+        const unidadSeleccionada = Number(unidad.value) || 1;
+        semana.innerHTML = Array.from({ length: SEMANAS_POR_UNIDAD }, (_, i) => {
+            const semanaLocal = i + 1;
+            const semanaGlobal = (unidadSeleccionada - 1) * SEMANAS_POR_UNIDAD + semanaLocal;
+            return `<option value="${semanaLocal}">Semana ${semanaGlobal}</option>`;
+        }).join("");
     }
+    actualizarSemanasDeUnidad();
+    unidad.addEventListener("change", actualizarSemanasDeUnidad);
 }
 
 function llenarSelectsNombresSemana() {
@@ -200,7 +207,7 @@ async function cargarMisTareas() {
                     ));
                     html += `<section style="margin:0 0 16px;background:${color.fondo};border:1px solid ${color.borde};border-radius:12px;padding:12px 14px">
                         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap">
-                            <h5 style="margin:0;color:${color.acento};font-size:.94rem">Semana ${semana}</h5>
+                            <h5 style="margin:0;color:${color.acento};font-size:.94rem">Semana ${semanaMostrada(unidad, semana)}</h5>
                             <span style="font-size:.78rem;color:${color.texto};background:${color.etiqueta};padding:4px 9px;border-radius:20px">${items.length} ${items.length === 1 ? "recurso" : "recursos"}</span>
                         </div>
                         <div class="lista-recursos-semana">${items.map(dibujarTarea).join("")}</div>
