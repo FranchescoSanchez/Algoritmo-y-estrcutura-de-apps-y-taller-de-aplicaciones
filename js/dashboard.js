@@ -4,7 +4,7 @@
    ========================================================== */
 import { CURSOS, UNIDADES, SEMANAS_POR_UNIDAD, semanaMostrada, PERFIL, MAX_MB } from "./config.js";
 import { supabaseListo, alCambiarSesion, explicarError } from "./supabase.js";
-import { listarTodas, subirArchivo, guardarEnlace, eliminarTarea, actualizarTituloTarea, urlDeVista, urlDeDescarga } from "./archivos.js";
+import { listarTodas, subirArchivo, guardarEnlace, eliminarTarea, actualizarTituloTarea, actualizarOrdenTareas, urlDeVista, urlDeDescarga } from "./archivos.js";
 import { escapar, pesoLegible, nombreDeCurso, ponerAnio } from "./util.js";
 import { guardarNombreSemana } from "./semanas.js";
 import "./barra.js";
@@ -202,9 +202,14 @@ async function cargarMisTareas() {
                 html += `<div style="margin:16px 0 20px;padding-left:12px;border-left:3px solid ${color.linea}">
                     <h4 style="margin:0 0 12px;color:${color.texto};font-size:.98rem">Unidad ${unidad}</h4>`;
                 for (const [semana, items] of [...semanas.entries()].sort((a,b) => a[0]-b[0])) {
-                    items.sort((a,b) => String(a.titulo || a.nombreOriginal || "").localeCompare(
-                        String(b.titulo || b.nombreOriginal || ""), "es", { numeric:true, sensitivity:"base" }
-                    ));
+                    items.sort((a,b) => {
+                        if (a.orden > 0 && b.orden > 0 && a.orden !== b.orden) return a.orden - b.orden;
+                        if (a.orden > 0 && b.orden === 0) return -1;
+                        if (a.orden === 0 && b.orden > 0) return 1;
+                        return String(a.titulo || a.nombreOriginal || "").localeCompare(
+                            String(b.titulo || b.nombreOriginal || ""), "es", { numeric:true, sensitivity:"base" }
+                        );
+                    });
                     html += `<section style="margin:0 0 16px;background:${color.fondo};border:1px solid ${color.borde};border-radius:12px;padding:12px 14px">
                         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap">
                             <h5 style="margin:0;color:${color.acento};font-size:.94rem">Semana ${semanaMostrada(unidad, semana)}</h5>
@@ -234,15 +239,49 @@ function dibujarTarea(t) {
         <span class="tarea-acciones">
           <a class="btn btn-linea btn-mini" href="${escapar(urlDeVista(t))}" target="_blank" rel="noopener">${t.tipoRecurso === "enlace" ? "Abrir enlace" : "Ver"}</a>
           ${t.tipoRecurso === "enlace" ? "" : `<a class="btn btn-linea btn-mini" href="${escapar(urlDeDescarga(t))}">Descargar</a>`}
+          <button class="btn btn-linea btn-mini" type="button" data-accion="subir-orden" data-id="${escapar(t.id)}" title="Mover antes">↑</button>
+          <button class="btn btn-linea btn-mini" type="button" data-accion="bajar-orden" data-id="${escapar(t.id)}" title="Mover después">↓</button>
           <button class="btn btn-linea btn-mini" type="button" data-accion="editar" data-id="${escapar(t.id)}">Editar nombre</button>
           <button class="btn btn-riesgo btn-mini" type="button" data-accion="eliminar" data-id="${escapar(t.id)}">Eliminar</button>
         </span>
       </div>`;
 }
 
+async function moverTarea(tarea, direccion, boton) {
+    const grupo = Array.from(misTareas.values()).filter(t =>
+        t.curso === tarea.curso && Number(t.unidad) === Number(tarea.unidad) &&
+        Number(t.semana) === Number(tarea.semana)
+    ).sort((a,b) => {
+        if (a.orden > 0 && b.orden > 0 && a.orden !== b.orden) return a.orden - b.orden;
+        if (a.orden > 0 && b.orden === 0) return -1;
+        if (a.orden === 0 && b.orden > 0) return 1;
+        return String(a.titulo || a.nombreOriginal || "").localeCompare(
+            String(b.titulo || b.nombreOriginal || ""), "es", { numeric:true, sensitivity:"base" }
+        );
+    });
+    const indice = grupo.findIndex(t => String(t.id) === String(tarea.id));
+    const destino = indice + direccion;
+    if (indice < 0 || destino < 0 || destino >= grupo.length) return;
+    [grupo[indice], grupo[destino]] = [grupo[destino], grupo[indice]];
+    boton.disabled = true;
+    try {
+        await actualizarOrdenTareas(grupo);
+        await cargarMisTareas();
+        mostrar("exito", "Orden actualizado. Los archivos se conservaron.");
+    } catch (e) {
+        mostrar("error", explicarError(e));
+        boton.disabled = false;
+    }
+}
+
 async function alPulsarBoton(ev) {
     const boton = ev.target.closest("button[data-accion]");
     if (!boton) return;
+    if (boton.dataset.accion === "subir-orden" || boton.dataset.accion === "bajar-orden") {
+        const tarea = misTareas.get(boton.dataset.id);
+        if (tarea) await moverTarea(tarea, boton.dataset.accion === "subir-orden" ? -1 : 1, boton);
+        return;
+    }
     if (boton.dataset.accion === "editar") {
         const tarea = misTareas.get(boton.dataset.id);
         if (!tarea) return;
