@@ -32,31 +32,16 @@ function datosDe({ data, error }) {
     return data;
 }
 
-function compararOrden(a, b) {
-    const ordenA = Number(a.orden) || 0;
-    const ordenB = Number(b.orden) || 0;
-    if (ordenA > 0 && ordenB > 0 && ordenA !== ordenB) return ordenA - ordenB;
-    if (ordenA > 0 && ordenB === 0) return -1;
-    if (ordenA === 0 && ordenB > 0) return 1;
-    return String(a.titulo || a.nombreOriginal || "").localeCompare(
-        String(b.titulo || b.nombreOriginal || ""), "es",
-        { numeric: true, sensitivity: "base" }
-    );
-}
-
 export async function listarPorCurso(slug) {
     const filas = datosDe(await supabase.from("tareas").select(COLUMNAS)
         .eq("curso", slug)
-        .order("unidad", { ascending: true })
-        .order("semana", { ascending: true }));
-    return filas.map(aTarea).sort((a, b) => {
-        if (Number(a.unidad) !== Number(b.unidad)) return Number(a.unidad) - Number(b.unidad);
-        if (Number(a.semana) !== Number(b.semana)) return Number(a.semana) - Number(b.semana);
-        return compararOrden(a, b);
-    });
+        .order("unidad").order("semana").order("fecha_subida", { ascending: false }));
+    return filas.map(aTarea);
 }
 
 export async function listarTodas() {
+    // Agrupa por curso, unidad y semana; ordena los títulos de forma natural:
+    // Ejercicio 1, Ejercicio 2 ... Ejercicio 10 (no Ejercicio 1, Ejercicio 10, Ejercicio 2).
     const filas = datosDe(await supabase.from("tareas").select(COLUMNAS)
         .order("curso", { ascending: true })
         .order("unidad", { ascending: true })
@@ -66,14 +51,23 @@ export async function listarTodas() {
         if (curso) return curso;
         if (Number(a.unidad) !== Number(b.unidad)) return Number(a.unidad) - Number(b.unidad);
         if (Number(a.semana) !== Number(b.semana)) return Number(a.semana) - Number(b.semana);
-        return compararOrden(a, b);
+        const titulo = String(a.titulo || a.nombreOriginal || "").localeCompare(
+            String(b.titulo || b.nombreOriginal || ""), "es",
+            { numeric: true, sensitivity: "base" }
+        );
+        if (titulo) return titulo;
+        return String(b.fechaSubida || "").localeCompare(String(a.fechaSubida || ""));
     });
 }
 
 /** Sube el archivo a Storage y despues registra la tarea en la tabla. */
 export async function subirArchivo(archivo, datos) {
-    if (archivo.size > MAX_MB * 1024 * 1024) throw new Error(`"${archivo.name}" pesa más de ${MAX_MB} MB.`);
-    if (archivo.size === 0) throw new Error(`"${archivo.name}" está vacío.`);
+    if (archivo.size > MAX_MB * 1024 * 1024) {
+        throw new Error(`"${archivo.name}" pesa más de ${MAX_MB} MB.`);
+    }
+    if (archivo.size === 0) {
+        throw new Error(`"${archivo.name}" está vacío.`);
+    }
     const ext = (archivo.name.match(/\.([A-Za-z0-9]{1,8})$/) || [])[1];
     const ruta = `${datos.curso}/unidad-${datos.unidad}/semana-${datos.semana}/`
         + crypto.randomUUID() + (ext ? "." + ext.toLowerCase() : "");
@@ -98,7 +92,9 @@ export async function guardarEnlace(datos) {
     let url;
     try { url = new URL(String(datos.url || "").trim()); }
     catch (_) { throw new Error("Escribe un enlace válido que comience con https:// o http://."); }
-    if (!["https:", "http:"].includes(url.protocol)) throw new Error("Solo se permiten enlaces http:// o https://.");
+    if (!["https:", "http:"].includes(url.protocol)) {
+        throw new Error("Solo se permiten enlaces http:// o https://.");
+    }
     const { data, error } = await supabase.from("tareas").insert({
         curso: datos.curso, unidad: datos.unidad, semana: datos.semana,
         titulo: datos.titulo || url.hostname, nombre_original: url.hostname,
@@ -113,7 +109,9 @@ export async function guardarEnlace(datos) {
 export async function actualizarOrdenTareas(tareas) {
     for (let i = 0; i < tareas.length; i++) {
         const { data, error } = await supabase.from("tareas")
-            .update({ orden: (i + 1) * 10 }).eq("id", tareas[i].id).select("id");
+            .update({ orden: (i + 1) * 10 })
+            .eq("id", tareas[i].id)
+            .select("id");
         if (error) throw error;
         if (!data || data.length === 0) {
             const sinPermiso = new Error("No tienes permiso para cambiar el orden de esta tarea.");
@@ -125,8 +123,10 @@ export async function actualizarOrdenTareas(tareas) {
 
 /** Actualiza solo el título visible de una tarea; conserva el archivo y su ruta. */
 export async function actualizarTituloTarea(id, titulo) {
-    const { data, error } = await supabase.from("tareas").update({ titulo: titulo.trim() })
-        .eq("id", id).select("id, titulo");
+    const { data, error } = await supabase.from("tareas")
+        .update({ titulo: titulo.trim() })
+        .eq("id", id)
+        .select("id, titulo");
     if (error) throw error;
     if (!data || data.length === 0) {
         const sinPermiso = new Error("row-level security: no se actualizó ninguna fila");
@@ -151,11 +151,13 @@ export async function eliminarTarea(tarea) {
     }
 }
 
+/** Enlace para ver el archivo en el navegador (el bucket es publico). */
 export function urlDeVista(tarea) {
     if (tarea.tipoRecurso === "enlace") return tarea.recursoUrl;
     return supabase.storage.from(BUCKET).getPublicUrl(tarea.ruta).data.publicUrl;
 }
 
+/** Enlace que fuerza la descarga con el nombre original. */
 export function urlDeDescarga(tarea) {
     if (tarea.tipoRecurso === "enlace") return tarea.recursoUrl;
     return supabase.storage.from(BUCKET).getPublicUrl(tarea.ruta, { download: tarea.nombreOriginal }).data.publicUrl;
