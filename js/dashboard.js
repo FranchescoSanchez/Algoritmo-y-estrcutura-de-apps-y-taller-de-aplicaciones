@@ -185,19 +185,23 @@ async function cargarMisTareas() {
 
         let html = '<div class="lista-tareas lista-tareas-agrupada">';
         for (const [curso, unidades] of cursos) {
+            const esTaller = curso === "taller-aplicaciones-1";
+            const color = esTaller
+                ? { fondo: "#f0f8f1", borde: "#c9e5ce", acento: "#287a3d", linea: "#a9d5b2", etiqueta: "#e0f1e3", texto: "#245d32" }
+                : { fondo: "#f1f6fd", borde: "#cbdcf2", acento: "#1761a5", linea: "#a9c9ec", etiqueta: "#e1edfb", texto: "#204f7c" };
             html += `<section style="margin:24px 0 30px">
-                <h3 style="margin:0 0 14px;font-size:1.08rem;color:var(--upla-profundo);border-bottom:2px solid #d9e8f7;padding-bottom:10px">${escapar(nombreDeCurso(CURSOS, curso))}</h3>`;
+                <h3 style="margin:0 0 14px;font-size:1.08rem;color:${color.acento};border-bottom:2px solid ${color.borde};padding-bottom:10px">${escapar(nombreDeCurso(CURSOS, curso))}</h3>`;
             for (const [unidad, semanas] of [...unidades.entries()].sort((a,b) => a[0]-b[0])) {
-                html += `<div style="margin:16px 0 20px;padding-left:12px;border-left:3px solid #cfe3f7">
-                    <h4 style="margin:0 0 12px;color:#24547a;font-size:.98rem">Unidad ${unidad}</h4>`;
+                html += `<div style="margin:16px 0 20px;padding-left:12px;border-left:3px solid ${color.linea}">
+                    <h4 style="margin:0 0 12px;color:${color.texto};font-size:.98rem">Unidad ${unidad}</h4>`;
                 for (const [semana, items] of [...semanas.entries()].sort((a,b) => a[0]-b[0])) {
                     items.sort((a,b) => String(a.titulo || a.nombreOriginal || "").localeCompare(
                         String(b.titulo || b.nombreOriginal || ""), "es", { numeric:true, sensitivity:"base" }
                     ));
-                    html += `<section style="margin:0 0 16px;background:#f4f8fc;border:1px solid #d8e7f5;border-radius:12px;padding:12px 14px">
+                    html += `<section style="margin:0 0 16px;background:${color.fondo};border:1px solid ${color.borde};border-radius:12px;padding:12px 14px">
                         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap">
-                            <h5 style="margin:0;color:#07558a;font-size:.94rem">Semana ${semana}</h5>
-                            <span style="font-size:.78rem;color:#58718a;background:#e5f0fa;padding:4px 9px;border-radius:20px">${items.length} ${items.length === 1 ? "recurso" : "recursos"}</span>
+                            <h5 style="margin:0;color:${color.acento};font-size:.94rem">Semana ${semana}</h5>
+                            <span style="font-size:.78rem;color:${color.texto};background:${color.etiqueta};padding:4px 9px;border-radius:20px">${items.length} ${items.length === 1 ? "recurso" : "recursos"}</span>
                         </div>
                         <div class="lista-recursos-semana">${items.map(dibujarTarea).join("")}</div>
                     </section>`;
