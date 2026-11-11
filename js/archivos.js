@@ -7,7 +7,7 @@
 import { supabase } from "./supabase.js";
 import { BUCKET, MAX_MB } from "./config.js";
 
-const COLUMNAS = "id, curso, unidad, semana, titulo, nombre_original, tipo_mime, tamano, ruta, fecha_subida, tipo_recurso, recurso_url";
+const COLUMNAS = "id, curso, unidad, semana, titulo, nombre_original, tipo_mime, tamano, ruta, fecha_subida, tipo_recurso, recurso_url, orden";
 
 function aTarea(f) {
     return {
@@ -22,7 +22,8 @@ function aTarea(f) {
         ruta: f.ruta,
         fechaSubida: f.fecha_subida,
         tipoRecurso: f.tipo_recurso || "archivo",
-        recursoUrl: f.recurso_url || ""
+        recursoUrl: f.recurso_url || "",
+        orden: Number(f.orden) || 0
     };
 }
 
@@ -119,6 +120,22 @@ export async function guardarEnlace(datos) {
     }).select("id").single();
     if (error) throw error;
     return data.id;
+}
+
+/** Guarda el orden manual de los recursos de una misma semana. */
+export async function actualizarOrdenTareas(tareas) {
+    for (let i = 0; i < tareas.length; i++) {
+        const { data, error } = await supabase.from("tareas")
+            .update({ orden: (i + 1) * 10 })
+            .eq("id", tareas[i].id)
+            .select("id");
+        if (error) throw error;
+        if (!data || data.length === 0) {
+            const sinPermiso = new Error("No tienes permiso para cambiar el orden de esta tarea.");
+            sinPermiso.code = "42501";
+            throw sinPermiso;
+        }
+    }
 }
 
 /** Actualiza solo el título visible de una tarea; conserva el archivo y su ruta. */
