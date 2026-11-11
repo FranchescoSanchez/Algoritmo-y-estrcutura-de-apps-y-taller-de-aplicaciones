@@ -4,7 +4,7 @@
    ========================================================== */
 import { CURSOS, UNIDADES, SEMANAS_POR_UNIDAD, semanaMostrada, PERFIL, MAX_MB } from "./config.js";
 import { supabaseListo, alCambiarSesion, explicarError } from "./supabase.js";
-import { listarTodas, compararOrdenTareas, subirArchivo, guardarEnlace, eliminarTarea, actualizarTituloTarea, actualizarOrdenTareas, urlDeVista, urlDeDescarga } from "./archivos.js";
+import { listarTodas, compararOrdenTareas, subirArchivo, guardarEnlace, eliminarTarea, actualizarTituloTarea, actualizarOrdenTareas, urlDeVista, urlDeDescarga } from "./archivos.js?v=orden-compartido-1";
 import { escapar, pesoLegible, nombreDeCurso, ponerAnio } from "./util.js";
 import { guardarNombreSemana } from "./semanas.js";
 import "./barra.js";
