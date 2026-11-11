@@ -4,7 +4,7 @@
    ========================================================== */
 import { CURSOS, UNIDADES, SEMANAS_POR_UNIDAD, semanaMostrada, PERFIL, MAX_MB } from "./config.js";
 import { supabaseListo, alCambiarSesion, explicarError } from "./supabase.js";
-import { listarTodas, subirArchivo, guardarEnlace, eliminarTarea, actualizarTituloTarea, actualizarOrdenTareas, urlDeVista, urlDeDescarga } from "./archivos.js";
+import { listarTodas, compararOrdenTareas, subirArchivo, guardarEnlace, eliminarTarea, actualizarTituloTarea, actualizarOrdenTareas, urlDeVista, urlDeDescarga } from "./archivos.js";
 import { escapar, pesoLegible, nombreDeCurso, ponerAnio } from "./util.js";
 import { guardarNombreSemana } from "./semanas.js";
 import "./barra.js";
@@ -202,14 +202,7 @@ async function cargarMisTareas() {
                 html += `<div style="margin:16px 0 20px;padding-left:12px;border-left:3px solid ${color.linea}">
                     <h4 style="margin:0 0 12px;color:${color.texto};font-size:.98rem">Unidad ${unidad}</h4>`;
                 for (const [semana, items] of [...semanas.entries()].sort((a,b) => a[0]-b[0])) {
-                    items.sort((a,b) => {
-                        if (a.orden > 0 && b.orden > 0 && a.orden !== b.orden) return a.orden - b.orden;
-                        if (a.orden > 0 && b.orden === 0) return -1;
-                        if (a.orden === 0 && b.orden > 0) return 1;
-                        return String(a.titulo || a.nombreOriginal || "").localeCompare(
-                            String(b.titulo || b.nombreOriginal || ""), "es", { numeric:true, sensitivity:"base" }
-                        );
-                    });
+                    items.sort(compararOrdenTareas);
                     html += `<section style="margin:0 0 16px;background:${color.fondo};border:1px solid ${color.borde};border-radius:12px;padding:12px 14px">
                         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap">
                             <h5 style="margin:0;color:${color.acento};font-size:.94rem">Semana ${semanaMostrada(unidad, semana)}</h5>
@@ -251,14 +244,7 @@ async function moverTarea(tarea, direccion, boton) {
     const grupo = Array.from(misTareas.values()).filter(t =>
         t.curso === tarea.curso && Number(t.unidad) === Number(tarea.unidad) &&
         Number(t.semana) === Number(tarea.semana)
-    ).sort((a,b) => {
-        if (a.orden > 0 && b.orden > 0 && a.orden !== b.orden) return a.orden - b.orden;
-        if (a.orden > 0 && b.orden === 0) return -1;
-        if (a.orden === 0 && b.orden > 0) return 1;
-        return String(a.titulo || a.nombreOriginal || "").localeCompare(
-            String(b.titulo || b.nombreOriginal || ""), "es", { numeric:true, sensitivity:"base" }
-        );
-    });
+    ).sort(compararOrdenTareas);
     const indice = grupo.findIndex(t => String(t.id) === String(tarea.id));
     const destino = indice + direccion;
     if (indice < 0 || destino < 0 || destino >= grupo.length) return;
