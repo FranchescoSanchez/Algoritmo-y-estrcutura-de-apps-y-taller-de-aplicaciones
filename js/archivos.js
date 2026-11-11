@@ -32,16 +32,36 @@ function datosDe({ data, error }) {
     return data;
 }
 
+/** Criterio único de orden para la página pública y el administrador. */
+export function compararOrdenTareas(a, b) {
+    const ordenA = Number(a.orden) || 0;
+    const ordenB = Number(b.orden) || 0;
+    if (ordenA > 0 && ordenB > 0 && ordenA !== ordenB) return ordenA - ordenB;
+    if (ordenA > 0 && ordenB === 0) return -1;
+    if (ordenA === 0 && ordenB > 0) return 1;
+
+    // Si todavía no se ha usado el movimiento manual, conserva el orden público:
+    // primero los recursos subidos más recientemente.
+    const fecha = String(b.fechaSubida || "").localeCompare(String(a.fechaSubida || ""));
+    if (fecha) return fecha;
+    return String(a.titulo || a.nombreOriginal || "").localeCompare(
+        String(b.titulo || b.nombreOriginal || ""), "es",
+        { numeric: true, sensitivity: "base" }
+    );
+}
+
 export async function listarPorCurso(slug) {
     const filas = datosDe(await supabase.from("tareas").select(COLUMNAS)
         .eq("curso", slug)
         .order("unidad").order("semana").order("fecha_subida", { ascending: false }));
-    return filas.map(aTarea);
+    return filas.map(aTarea).sort((a, b) => {
+        if (Number(a.unidad) !== Number(b.unidad)) return Number(a.unidad) - Number(b.unidad);
+        if (Number(a.semana) !== Number(b.semana)) return Number(a.semana) - Number(b.semana);
+        return compararOrdenTareas(a, b);
+    });
 }
 
 export async function listarTodas() {
-    // Agrupa por curso, unidad y semana; ordena los títulos de forma natural:
-    // Ejercicio 1, Ejercicio 2 ... Ejercicio 10 (no Ejercicio 1, Ejercicio 10, Ejercicio 2).
     const filas = datosDe(await supabase.from("tareas").select(COLUMNAS)
         .order("curso", { ascending: true })
         .order("unidad", { ascending: true })
@@ -51,12 +71,7 @@ export async function listarTodas() {
         if (curso) return curso;
         if (Number(a.unidad) !== Number(b.unidad)) return Number(a.unidad) - Number(b.unidad);
         if (Number(a.semana) !== Number(b.semana)) return Number(a.semana) - Number(b.semana);
-        const titulo = String(a.titulo || a.nombreOriginal || "").localeCompare(
-            String(b.titulo || b.nombreOriginal || ""), "es",
-            { numeric: true, sensitivity: "base" }
-        );
-        if (titulo) return titulo;
-        return String(b.fechaSubida || "").localeCompare(String(a.fechaSubida || ""));
+        return compararOrdenTareas(a, b);
     });
 }
 
