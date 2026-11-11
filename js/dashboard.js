@@ -164,30 +164,51 @@ async function cargarMisTareas() {
         misTareas.clear();
         tareas.forEach((t) => misTareas.set(t.id, t));
         document.getElementById("panel-total").textContent = tareas.length;
-
-        if (tareas.length === 0) {
-            destino.innerHTML = `
-              <div class="vacio">
-                <strong>Todavía no has subido ninguna tarea</strong>
-                Usa el formulario de arriba para subir la primera.
-              </div>`;
+        if (!tareas.length) {
+            destino.innerHTML = `<div class="vacio"><strong>Todavía no has subido ninguna tarea</strong>Usa el formulario de arriba para subir la primera.</div>`;
             return;
         }
 
-        let html = '<div class="lista-tareas">';
-        let cursoAnterior = null;
-        for (const t of tareas) {
-            if (t.curso !== cursoAnterior) {
-                cursoAnterior = t.curso;
-                html += `<h3 style="margin:22px 0 4px;font-size:1.02rem;color:var(--upla-profundo)">
-                            ${escapar(nombreDeCurso(CURSOS, t.curso))}</h3>`;
-            }
-            html += dibujarTarea(t);
+        // Agrupar para que el administrador encuentre cada recurso por curso, unidad y semana.
+        const cursos = new Map();
+        for (const tarea of tareas) {
+            const curso = tarea.curso || "sin-curso";
+            if (!cursos.has(curso)) cursos.set(curso, new Map());
+            const unidades = cursos.get(curso);
+            const unidad = Number(tarea.unidad) || 1;
+            if (!unidades.has(unidad)) unidades.set(unidad, new Map());
+            const semanas = unidades.get(unidad);
+            const semana = Number(tarea.semana) || 1;
+            if (!semanas.has(semana)) semanas.set(semana, []);
+            semanas.get(semana).push(tarea);
         }
-        destino.innerHTML = html + "</div>";
+
+        let html = '<div class="lista-tareas lista-tareas-agrupada">';
+        for (const [curso, unidades] of cursos) {
+            html += `<section style="margin:24px 0 30px">
+                <h3 style="margin:0 0 14px;font-size:1.08rem;color:var(--upla-profundo);border-bottom:2px solid #d9e8f7;padding-bottom:10px">${escapar(nombreDeCurso(CURSOS, curso))}</h3>`;
+            for (const [unidad, semanas] of [...unidades.entries()].sort((a,b) => a[0]-b[0])) {
+                html += `<div style="margin:16px 0 20px;padding-left:12px;border-left:3px solid #cfe3f7">
+                    <h4 style="margin:0 0 12px;color:#24547a;font-size:.98rem">Unidad ${unidad}</h4>`;
+                for (const [semana, items] of [...semanas.entries()].sort((a,b) => a[0]-b[0])) {
+                    items.sort((a,b) => String(a.titulo || a.nombreOriginal || "").localeCompare(
+                        String(b.titulo || b.nombreOriginal || ""), "es", { numeric:true, sensitivity:"base" }
+                    ));
+                    html += `<section style="margin:0 0 16px;background:#f4f8fc;border:1px solid #d8e7f5;border-radius:12px;padding:12px 14px">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+                            <h5 style="margin:0;color:#07558a;font-size:.94rem">Semana ${semana}</h5>
+                            <span style="font-size:.78rem;color:#58718a;background:#e5f0fa;padding:4px 9px;border-radius:20px">${items.length} ${items.length === 1 ? "recurso" : "recursos"}</span>
+                        </div>
+                        <div class="lista-recursos-semana">${items.map(dibujarTarea).join("")}</div>
+                    </section>`;
+                }
+                html += '</div>';
+            }
+            html += '</section>';
+        }
+        destino.innerHTML = html + '</div>';
     } catch (e) {
-        destino.innerHTML = '<div class="vacio"><strong>No se pudieron leer tus tareas</strong>'
-            + escapar(explicarError(e)) + "</div>";
+        destino.innerHTML = '<div class="vacio"><strong>No se pudieron leer tus tareas</strong>' + escapar(explicarError(e)) + '</div>';
     }
 }
 
