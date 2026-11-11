@@ -4,7 +4,7 @@
    ========================================================== */
 import { CURSOS, UNIDADES, SEMANAS_POR_UNIDAD, PERFIL, semanaMostrada } from "./config.js";
 import { supabaseListo, explicarError, avisoConfiguracion } from "./supabase.js";
-import { listarPorCurso, urlDeVista, urlDeDescarga } from "./archivos.js";
+import { listarPorCurso, urlDeVista, urlDeDescarga } from "./archivos.js?v=orden-compartido-1";
 import { escapar, pesoLegible, extension, ponerAnio } from "./util.js";
 import { listarNombresSemanas } from "./semanas.js";
 import "./barra.js";
