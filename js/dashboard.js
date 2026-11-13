@@ -4,7 +4,7 @@
    ========================================================== */
 import { CURSOS, UNIDADES, SEMANAS_POR_UNIDAD, semanaMostrada, PERFIL, MAX_MB } from "./config.js";
 import { supabaseListo, alCambiarSesion, explicarError } from "./supabase.js";
-import { listarTodas, compararOrdenTareas, subirArchivo, guardarEnlace, eliminarTarea, actualizarTituloTarea, actualizarOrdenTareas, urlDeVista, urlDeDescarga } from "./archivos.js?v=orden-compartido-1";
+import { listarTodas, compararOrdenTareas, subirArchivo, guardarEnlace, eliminarTarea, actualizarTituloTarea, reemplazarImagenTarea, actualizarOrdenTareas, urlDeVista, urlDeDescarga } from "./archivos.js?v=imagen-reemplazo-1";
 import { escapar, pesoLegible, nombreDeCurso, ponerAnio } from "./util.js";
 import { guardarNombreSemana } from "./semanas.js";
 import "./barra.js";
@@ -234,6 +234,7 @@ function dibujarTarea(t) {
           ${t.tipoRecurso === "enlace" ? "" : `<a class="btn btn-linea btn-mini" href="${escapar(urlDeDescarga(t))}">Descargar</a>`}
           <button class="btn btn-linea btn-mini" type="button" data-accion="subir-orden" data-id="${escapar(t.id)}" title="Mover antes">↑</button>
           <button class="btn btn-linea btn-mini" type="button" data-accion="bajar-orden" data-id="${escapar(t.id)}" title="Mover después">↓</button>
+          ${t.tipoRecurso !== "enlace" && String(t.tipoMime || "").startsWith("image/") ? `<button class="btn btn-linea btn-mini" type="button" data-accion="reemplazar-imagen" data-id="${escapar(t.id)}">Reemplazar imagen</button>` : ""}
           <button class="btn btn-linea btn-mini" type="button" data-accion="editar" data-id="${escapar(t.id)}">Editar nombre</button>
           <button class="btn btn-riesgo btn-mini" type="button" data-accion="eliminar" data-id="${escapar(t.id)}">Eliminar</button>
         </span>
@@ -266,6 +267,31 @@ async function alPulsarBoton(ev) {
     if (boton.dataset.accion === "subir-orden" || boton.dataset.accion === "bajar-orden") {
         const tarea = misTareas.get(boton.dataset.id);
         if (tarea) await moverTarea(tarea, boton.dataset.accion === "subir-orden" ? -1 : 1, boton);
+        return;
+    }
+    if (boton.dataset.accion === "reemplazar-imagen") {
+        const tarea = misTareas.get(boton.dataset.id);
+        if (!tarea) return;
+        const selector = document.createElement("input");
+        selector.type = "file";
+        selector.accept = "image/*";
+        selector.addEventListener("change", async () => {
+            const imagen = selector.files && selector.files[0];
+            if (!imagen) return;
+            if (!confirm(`¿Reemplazar la imagen de "${tarea.titulo || tarea.nombreOriginal}" por "${imagen.name}"? La imagen anterior dejará de mostrarse.`)) return;
+            boton.disabled = true;
+            boton.textContent = "Reemplazando…";
+            try {
+                await reemplazarImagenTarea(tarea, imagen);
+                await cargarMisTareas();
+                mostrar("exito", "Imagen reemplazada correctamente. Se conservaron el nombre y la ubicación de la actividad.");
+            } catch (e) {
+                mostrar("error", explicarError(e));
+                boton.disabled = false;
+                boton.textContent = "Reemplazar imagen";
+            }
+        }, { once: true });
+        selector.click();
         return;
     }
     if (boton.dataset.accion === "editar") {
