@@ -6,7 +6,7 @@ import { CURSOS, UNIDADES, SEMANAS_POR_UNIDAD, semanaMostrada, PERFIL, MAX_MB } 
 import { supabaseListo, alCambiarSesion, explicarError } from "./supabase.js";
 import { listarTodas, compararOrdenTareas, subirArchivo, guardarEnlace, eliminarTarea, actualizarTituloTarea, reemplazarImagenTarea, actualizarOrdenTareas, urlDeVista, urlDeDescarga } from "./archivos.js?v=imagen-reemplazo-1";
 import { escapar, pesoLegible, nombreDeCurso, ponerAnio } from "./util.js";
-import { guardarNombreSemana } from "./semanas.js";
+import { guardarNombreSemana, listarNombresSemanas } from "./semanas.js";
 import "./barra.js";
 
 const misTareas = new Map();
@@ -176,7 +176,10 @@ async function cargarMisTareas() {
             return;
         }
 
-        // Agrupar para que el administrador encuentre cada recurso por curso, unidad y semana.
+        // Misma estructura visual que la página pública: curso > unidades plegables > semanas.
+        let nombresSemanas = [];
+        try { nombresSemanas = await listarNombresSemanas(); } catch (_) { /* Los nombres personalizados son opcionales. */ }
+
         const cursos = new Map();
         for (const tarea of tareas) {
             const curso = tarea.curso || "sin-curso";
@@ -192,30 +195,51 @@ async function cargarMisTareas() {
 
         let html = '<div class="lista-tareas lista-tareas-agrupada">';
         for (const [curso, unidades] of cursos) {
-            const esTaller = curso === "taller-aplicaciones-1";
-            const color = esTaller
-                ? { fondo: "#f0f8f1", borde: "#c9e5ce", acento: "#287a3d", linea: "#a9d5b2", etiqueta: "#e0f1e3", texto: "#245d32" }
-                : { fondo: "#f1f6fd", borde: "#cbdcf2", acento: "#1761a5", linea: "#a9c9ec", etiqueta: "#e1edfb", texto: "#204f7c" };
             html += `<section style="margin:24px 0 30px">
-                <h3 style="margin:0 0 14px;font-size:1.08rem;color:${color.acento};border-bottom:2px solid ${color.borde};padding-bottom:10px">${escapar(nombreDeCurso(CURSOS, curso))}</h3>`;
-            for (const [unidad, semanas] of [...unidades.entries()].sort((a,b) => a[0]-b[0])) {
-                html += `<div style="margin:16px 0 20px;padding-left:12px;border-left:3px solid ${color.linea}">
-                    <h4 style="margin:0 0 12px;color:${color.texto};font-size:.98rem">Unidad ${unidad}</h4>`;
-                for (const [semana, items] of [...semanas.entries()].sort((a,b) => a[0]-b[0])) {
-                    items.sort(compararOrdenTareas);
-                    html += `<section style="margin:0 0 16px;background:${color.fondo};border:1px solid ${color.borde};border-radius:12px;padding:12px 14px">
-                        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap">
-                            <h5 style="margin:0;color:${color.acento};font-size:.94rem">Semana ${semanaMostrada(unidad, semana)}</h5>
-                            <span style="font-size:.78rem;color:${color.texto};background:${color.etiqueta};padding:4px 9px;border-radius:20px">${items.length} ${items.length === 1 ? "recurso" : "recursos"}</span>
+                <h3 style="margin:0 0 14px;font-size:1.08rem;border-bottom:2px solid var(--linea);padding-bottom:10px">${escapar(nombreDeCurso(CURSOS, curso))}</h3>
+                <div class="unidades-admin">`;
+            for (let unidad = 1; unidad <= UNIDADES; unidad++) {
+                const semanasConTareas = unidades.get(unidad) || new Map();
+                const entregadas = Array.from({ length: SEMANAS_POR_UNIDAD }, (_, i) => i + 1)
+                    .filter(s => (semanasConTareas.get(s) || []).length > 0).length;
+                const completa = entregadas === SEMANAS_POR_UNIDAD;
+                const hexClase = entregadas > 0 ? "hexagono" : "hexagono vacio";
+                html += `<section class="unidad">
+                    <button class="unidad-cabecera" type="button" aria-expanded="false">
+                        <span class="${hexClase}">${unidad}</span>
+                        <span class="unidad-titulo">
+                            <strong>Unidad ${unidad}</strong>
+                            <span>${entregadas} de ${SEMANAS_POR_UNIDAD} semanas con tareas</span>
+                        </span>
+                        <svg class="flecha" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+                            <path d="M6 9l6 6 6-6"/>
+                        </svg>
+                    </button>
+                    <div class="unidad-cuerpo">`;
+                for (let semana = 1; semana <= SEMANAS_POR_UNIDAD; semana++) {
+                    const items = (semanasConTareas.get(semana) || []).sort(compararOrdenTareas);
+                    const numero = semanaMostrada(unidad, semana);
+                    const nombre = nombresSemanas.find(n => n.curso === curso && Number(n.unidad) === unidad && Number(n.semana) === semana)?.nombre || "";
+                    const insignia = items.length
+                        ? `<span class="pin pin-ok">${items.length} ${items.length === 1 ? "tarea" : "tareas"}</span>`
+                        : '<span class="pin pin-pendiente">Pendiente</span>';
+                    const contenido = items.length
+                        ? `<div class="lista-tareas">${items.map(dibujarTarea).join("")}</div>`
+                        : '<div class="semana-vacia">Aún no hay tareas subidas en esta semana.</div>';
+                    html += `<div class="semana">
+                        <div class="semana-cabecera">
+                            <span class="semana-numero">Semana ${numero}${nombre ? ": " + escapar(nombre) : ""}</span>
+                            ${insignia}
                         </div>
-                        <div class="lista-recursos-semana">${items.map(dibujarTarea).join("")}</div>
-                    </section>`;
+                        ${contenido}
+                    </div>`;
                 }
-                html += '</div>';
+                html += '</div></section>';
             }
-            html += '</section>';
+            html += '</div></section>';
         }
-        destino.innerHTML = html + '</div>';
+        html += '</div>';
+
     } catch (e) {
         destino.innerHTML = '<div class="vacio"><strong>No se pudieron leer tus tareas</strong>' + escapar(explicarError(e)) + '</div>';
     }
