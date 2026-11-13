@@ -239,6 +239,13 @@ async function cargarMisTareas() {
             html += '</div></section>';
         }
         html += '</div>';
+        destino.innerHTML = html;
+        destino.querySelectorAll(".unidad-cabecera").forEach(cabecera => {
+            cabecera.addEventListener("click", () => {
+                const abierta = cabecera.closest(".unidad").classList.toggle("abierta");
+                cabecera.setAttribute("aria-expanded", String(abierta));
+            });
+        });
 
     } catch (e) {
         destino.innerHTML = '<div class="vacio"><strong>No se pudieron leer tus tareas</strong>' + escapar(explicarError(e)) + '</div>';
