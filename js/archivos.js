@@ -102,6 +102,49 @@ export async function subirArchivo(archivo, datos) {
     return data.id;
 }
 
+/**
+ * Reemplaza la imagen de una actividad sin cambiar su registro ni su título.
+ * Primero sube a una ruta nueva, actualiza la fila y solo entonces retira la imagen anterior.
+ */
+export async function reemplazarImagenTarea(tarea, archivo) {
+    if (!tarea || tarea.tipoRecurso === "enlace" || !tarea.ruta) {
+        throw new Error("Esta actividad no tiene una imagen almacenada para reemplazar.");
+    }
+    if (!archivo || !archivo.type || !archivo.type.startsWith("image/")) {
+        throw new Error("Selecciona una imagen válida (JPG, PNG, WEBP o GIF).");
+    }
+    if (archivo.size === 0) throw new Error("La imagen seleccionada está vacía.");
+    if (archivo.size > MAX_MB * 1024 * 1024) {
+        throw new Error(`La imagen supera el límite de ${MAX_MB} MB.`);
+    }
+
+    const ext = (archivo.name.match(/\.([A-Za-z0-9]{1,8})$/) || [])[1];
+    const nuevaRuta = `${tarea.curso}/unidad-${tarea.unidad}/semana-${tarea.semana}/`
+        + crypto.randomUUID() + (ext ? "." + ext.toLowerCase() : "");
+    const subida = await supabase.storage.from(BUCKET).upload(nuevaRuta, archivo, {
+        contentType: archivo.type, upsert: false
+    });
+    if (subida.error) throw subida.error;
+
+    const { data, error } = await supabase.from("tareas").update({
+        ruta: nuevaRuta,
+        nombre_original: archivo.name,
+        tipo_mime: archivo.type,
+        tamano: archivo.size
+    }).eq("id", tarea.id).select("id").maybeSingle();
+
+    if (error || !data) {
+        await supabase.storage.from(BUCKET).remove([nuevaRuta]);
+        if (error) throw error;
+        throw new Error("No se pudo actualizar la actividad. La imagen anterior sigue intacta.");
+    }
+
+    const retirada = await supabase.storage.from(BUCKET).remove([tarea.ruta]);
+    if (retirada.error) {
+        console.warn("La imagen nueva ya está activa, pero no se pudo retirar la anterior:", retirada.error.message);
+    }
+}
+
 /** Registra un enlace externo como una tarea, sin subir archivos a Storage. */
 export async function guardarEnlace(datos) {
     let url;
